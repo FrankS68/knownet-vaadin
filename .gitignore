@@ -1,0 +1,17 @@
+target/
+neo4j-data/
+node_modules/
+frontend/generated/
+src/main/dev-bundle/
+.vaadin/
+vite.generated.ts
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# IntelliJ
+.idea/
+*.iml
