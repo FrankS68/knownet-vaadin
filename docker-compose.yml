@@ -3,13 +3,10 @@ services:
     image: neo4j:5
     container_name: knownet-neo4j
     ports:
-      - "7474:7474"   # Browser UI: http://localhost:7474
+      - "7474:7474"   # Browser UI
       - "7687:7687"   # Bolt
     environment:
       - NEO4J_AUTH=neo4j/knownet123
-      - NEO4J_server_memory_heap_initial__size=256m
-      - NEO4J_server_memory_heap_max__size=512m
-      - NEO4J_server_memory_pagecache__size=128m
     volumes:
       - neo4j-data:/data
     restart: unless-stopped
@@ -17,8 +14,8 @@ services:
       test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "knownet123", "RETURN 1"]
       interval: 30s
       timeout: 10s
-      retries: 5
-      start_period: 40s
+      retries: 10
+      start_period: 60s
 
   knownet:
     image: knownet-vaadin:latest
