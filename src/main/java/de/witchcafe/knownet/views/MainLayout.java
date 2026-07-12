@@ -35,6 +35,7 @@ public class MainLayout extends AppLayout {
         if (ViewSecurity.istAdmin(currentUser)) {
             nav.addItem(new SideNavItem("Benutzer", BenutzerView.class));
             nav.addItem(new SideNavItem("API-Keys", ApiKeyView.class));
+            nav.addItem(new SideNavItem("Import", ImportView.class));
         }
 
         addToDrawer(nav);

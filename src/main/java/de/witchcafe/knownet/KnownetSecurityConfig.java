@@ -76,7 +76,8 @@ public class KnownetSecurityConfig {
                 .requestMatchers(
                         new AntPathRequestMatcher("/api/quellen/**"),
                         new AntPathRequestMatcher("/api/aussagen/**"),
-                        new AntPathRequestMatcher("/api/verknuepfungen/**")
+                        new AntPathRequestMatcher("/api/verknuepfungen/**"),
+                        new AntPathRequestMatcher("/api/import/**")
                 ).authenticated());
 
         return http.build();
