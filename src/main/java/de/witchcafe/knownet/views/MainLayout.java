@@ -3,6 +3,7 @@ package de.witchcafe.knownet.views;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Anchor;
@@ -16,6 +17,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 
 import de.witchcafe.auth.CurrentUser;
 
+@AnonymousAllowed
 public class MainLayout extends AppLayout {
 
     public MainLayout(CurrentUser currentUser) {
