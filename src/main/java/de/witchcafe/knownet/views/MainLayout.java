@@ -30,14 +30,13 @@ public class MainLayout extends AppLayout {
         nav.addItem(new SideNavItem("Verknüpfungen", VerknuepfungenView.class));
         nav.addItem(new SideNavItem("Graph", GraphView.class));
 
-        // Benutzerverwaltung nur für Admins
         if (ViewSecurity.istAdmin(currentUser)) {
             nav.addItem(new SideNavItem("Benutzer", BenutzerView.class));
+            nav.addItem(new SideNavItem("API-Keys", ApiKeyView.class));
         }
 
         addToDrawer(nav);
 
-        // Navbar: Titel + Benutzerbereich rechts
         HorizontalLayout navBar = new HorizontalLayout();
         navBar.setWidthFull();
         navBar.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
@@ -47,9 +46,7 @@ public class MainLayout extends AppLayout {
         currentUser.get().ifPresentOrElse(
             user -> {
                 Avatar avatar = new Avatar(user.getFullName());
-                if (user.getPictureUrl() != null) {
-                    avatar.setImage(user.getPictureUrl());
-                }
+                if (user.getPictureUrl() != null) avatar.setImage(user.getPictureUrl());
                 avatar.setTooltipEnabled(true);
 
                 Span name = new Span(user.getFullName());

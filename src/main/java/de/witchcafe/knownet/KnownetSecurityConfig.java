@@ -18,6 +18,7 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @EnableWebSecurity
@@ -27,20 +28,23 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 public class KnownetSecurityConfig {
 
     private final OAuthUserService oAuthUserService;
+    private final ApiKeyFilter apiKeyFilter;
 
-    public KnownetSecurityConfig(OAuthUserService oAuthUserService) {
+    public KnownetSecurityConfig(OAuthUserService oAuthUserService, ApiKeyFilter apiKeyFilter) {
         this.oAuthUserService = oAuthUserService;
+        this.apiKeyFilter = apiKeyFilter;
     }
 
     @Bean
     @Primary
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        // Vaadin Security — loginView steuert wohin unauthentifizierte Vaadin-Requests gehen
+        // API-Key Filter vor Standard-Auth
+        http.addFilterBefore(apiKeyFilter, UsernamePasswordAuthenticationFilter.class);
+
         http.with(VaadinSecurityConfigurer.vaadin(), cfg ->
                 cfg.loginView("login"));
 
-        // OAuth2 Login
         http.oauth2Login(oauth2 -> oauth2
                 .loginPage("/login.html")
                 .defaultSuccessUrl("/", true)
@@ -49,7 +53,6 @@ public class KnownetSecurityConfig {
                         .oidcUserService(oidcUserService()))
                 .successHandler(oAuthUserService));
 
-        // Logout — explizit als Spring-Security-Endpunkt, nicht als Vaadin-Route
         http.logout(logout -> logout
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
                 .logoutSuccessUrl("/login.html")
@@ -58,7 +61,6 @@ public class KnownetSecurityConfig {
                 .deleteCookies("JSESSIONID")
                 .permitAll());
 
-        // Oeffentliche Endpunkte
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                         new AntPathRequestMatcher("/api/graph"),
@@ -69,7 +71,13 @@ public class KnownetSecurityConfig {
                         new AntPathRequestMatcher("/oauth2/**"),
                         new AntPathRequestMatcher("/login/oauth2/**"),
                         new AntPathRequestMatcher("/logout")
-                ).permitAll());
+                ).permitAll()
+                // API-Endpunkte: Authentifizierung via Bearer Token
+                .requestMatchers(
+                        new AntPathRequestMatcher("/api/quellen/**"),
+                        new AntPathRequestMatcher("/api/aussagen/**"),
+                        new AntPathRequestMatcher("/api/verknuepfungen/**")
+                ).authenticated());
 
         return http.build();
     }
