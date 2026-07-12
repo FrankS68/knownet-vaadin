@@ -150,6 +150,11 @@
             <id>vaadin-releases</id>
             <url>https://maven.vaadin.com/vaadin-releases</url>
         </repository>
+        <repository>
+            <id>github</id>
+            <name>GitHub FrankS68 Maven Packages</name>
+            <url>https://maven.pkg.github.com/FrankS68/witch-auth</url>
+        </repository>
     </repositories>
     <pluginRepositories>
         <pluginRepository>

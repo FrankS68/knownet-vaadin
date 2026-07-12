@@ -1,24 +1,23 @@
 # ---- Build-Stage ----
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
+
+ARG GITHUB_TOKEN
+ENV GITHUB_TOKEN=${GITHUB_TOKEN}
+
+# settings.xml mit GitHub Token fuer witch-auth von GitHub Packages
+RUN mkdir -p /root/.m2 && printf '<?xml version="1.0"?><settings><servers><server><id>github</id><username>FrankS68</username><password>%s</password></server></servers></settings>' "$GITHUB_TOKEN" > /root/.m2/settings.xml
+
 COPY pom.xml .
-# Dependencies vorab cachen
-RUN mvn dependency:go-offline -q
+RUN mvn dependency:go-offline -q || true
 COPY src ./src
 COPY frontend ./frontend
-# Vaadin Production Build (kein Dev-Server, minifiziertes Frontend)
 RUN mvn package -Pproduction -DskipTests -q
 
 # ---- Runtime-Stage ----
-# eclipse-temurin:17-jre läuft nativ auf amd64 UND arm64 (Raspberry Pi 4/5)
 FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-
-# Neo4j-Verbindung wird per Umgebungsvariable überschrieben (siehe docker-compose.yml)
-ENV SPRING_NEO4J_URI=bolt://neo4j:7687
-ENV SPRING_NEO4J_AUTHENTICATION_USERNAME=neo4j
-ENV SPRING_NEO4J_AUTHENTICATION_PASSWORD=knownet123
 
 EXPOSE 8082
 ENTRYPOINT ["java", "-jar", "app.jar"]
