@@ -21,7 +21,9 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 
+import de.witchcafe.auth.CurrentUser;
 import de.witchcafe.knownet.domain.Aussage;
 import de.witchcafe.knownet.domain.Quelle;
 import de.witchcafe.knownet.domain.StammtAus;
@@ -31,6 +33,7 @@ import de.witchcafe.knownet.service.SchlagwortService;
 
 @Route(value = "aussagen", layout = MainLayout.class)
 @PageTitle("Aussagen | Knownet")
+@AnonymousAllowed
 public class AussagenView extends VerticalLayout {
 
     private static final Logger log = LoggerFactory.getLogger(AussagenView.class);
@@ -38,6 +41,7 @@ public class AussagenView extends VerticalLayout {
     private final AussageRepository aussageRepository;
     private final QuelleRepository quelleRepository;
     private final SchlagwortService schlagwortService;
+    private final boolean kannBearbeiten;
 
     private final Grid<Aussage> grid = new Grid<>(Aussage.class, false);
     private final DbFehlerBanner fehlerBanner = new DbFehlerBanner(this::aktualisiere);
@@ -50,20 +54,20 @@ public class AussagenView extends VerticalLayout {
 
     public AussagenView(AussageRepository aussageRepository,
                         QuelleRepository quelleRepository,
-                        SchlagwortService schlagwortService) {
+                        SchlagwortService schlagwortService,
+                        CurrentUser currentUser) {
         this.aussageRepository = aussageRepository;
         this.quelleRepository = quelleRepository;
         this.schlagwortService = schlagwortService;
+        this.kannBearbeiten = ViewSecurity.kannBearbeiten(currentUser);
 
         setSizeFull();
 
         textFeld.setWidthFull();
         textFeld.setPlaceholder("Kernaussage in eigenen Worten ...");
-
         quelleBox.setWidth("20em");
         quelleBox.setItemLabelGenerator(Quelle::toString);
         quelleBox.setClearButtonVisible(true);
-
         zitatFeld.setWidth("24em");
         fundstelleFeld.setWidth("12em");
         fundstelleFeld.setPlaceholder("S. 12 / 03:41 / Kap. 2");
@@ -77,24 +81,27 @@ public class AussagenView extends VerticalLayout {
         zeile.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
         zeile.setWidthFull();
 
+        // Erfassungsbereich nur für Autoren/Admins
+        textFeld.setVisible(kannBearbeiten);
+        zeile.setVisible(kannBearbeiten);
+
         grid.addColumn(Aussage::getText).setHeader("Aussage").setFlexGrow(1);
         grid.addColumn(Aussage::getQuellenAlsText).setHeader("Quellen").setAutoWidth(true);
         grid.addColumn(Aussage::getSchlagworteAlsText).setHeader("Schlagworte").setAutoWidth(true);
 
-        grid.addComponentColumn(aussage -> {
-            Button bearbeiten = new Button("Bearbeiten", e -> oeffneBearbeitenDialog(aussage));
-            bearbeiten.addThemeVariants(ButtonVariant.LUMO_SMALL);
-
-            Button loeschen = new Button("Löschen", e -> bestaetigenUndLoeschen(aussage));
-            loeschen.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR);
-
-            HorizontalLayout aktionen = new HorizontalLayout(bearbeiten, loeschen);
-            aktionen.setSpacing(true);
-            return aktionen;
-        }).setHeader("Aktionen").setAutoWidth(true);
+        if (kannBearbeiten) {
+            grid.addComponentColumn(aussage -> {
+                Button bearbeiten = new Button("Bearbeiten", e -> oeffneBearbeitenDialog(aussage));
+                bearbeiten.addThemeVariants(ButtonVariant.LUMO_SMALL);
+                Button loeschen = new Button("Löschen", e -> bestaetigenUndLoeschen(aussage));
+                loeschen.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR);
+                HorizontalLayout aktionen = new HorizontalLayout(bearbeiten, loeschen);
+                aktionen.setSpacing(true);
+                return aktionen;
+            }).setHeader("Aktionen").setAutoWidth(true);
+        }
 
         grid.setSizeFull();
-
         add(fehlerBanner, textFeld, zeile, grid);
         aktualisiere();
     }
@@ -108,7 +115,6 @@ public class AussagenView extends VerticalLayout {
         textEdit.setWidthFull();
         textEdit.setMinHeight("6em");
         textEdit.setValue(aussage.getText() != null ? aussage.getText() : "");
-
         TextField tagsEdit = new TextField("Schlagworte (kommasepariert)");
         tagsEdit.setWidthFull();
         tagsEdit.setValue(aussage.getSchlagworteAlsText());
@@ -130,9 +136,7 @@ public class AussagenView extends VerticalLayout {
             }
         });
         speichern.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
         Button abbrechen = new Button("Abbrechen", e -> dialog.close());
-
         dialog.add(form);
         dialog.getFooter().add(abbrechen, speichern);
         dialog.open();
@@ -160,25 +164,18 @@ public class AussagenView extends VerticalLayout {
     }
 
     private void speichereAussage() {
-        if (textFeld.isEmpty()) {
-            Notification.show("Bitte einen Aussagetext eingeben");
-            return;
-        }
+        if (textFeld.isEmpty()) { Notification.show("Bitte einen Aussagetext eingeben"); return; }
         try {
             Aussage aussage = new Aussage(textFeld.getValue().trim());
             aussage.setSchlagworte(schlagwortService.ausKommaListe(tagsFeld.getValue()));
             Quelle quelle = quelleBox.getValue();
             if (quelle != null) {
                 aussage.getQuellen().add(new StammtAus(quelle,
-                        zitatFeld.getValue().trim(),
-                        fundstelleFeld.getValue().trim()));
+                        zitatFeld.getValue().trim(), fundstelleFeld.getValue().trim()));
             }
             aussageRepository.save(aussage);
-            textFeld.clear();
-            quelleBox.clear();
-            zitatFeld.clear();
-            fundstelleFeld.clear();
-            tagsFeld.clear();
+            textFeld.clear(); quelleBox.clear(); zitatFeld.clear();
+            fundstelleFeld.clear(); tagsFeld.clear();
             aktualisiere();
             Notification.show("Aussage gespeichert");
         } catch (RuntimeException e) {

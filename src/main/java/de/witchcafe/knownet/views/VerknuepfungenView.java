@@ -20,7 +20,9 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 
+import de.witchcafe.auth.CurrentUser;
 import de.witchcafe.knownet.domain.Aussage;
 import de.witchcafe.knownet.domain.BeziehungsArt;
 import de.witchcafe.knownet.repo.AussageRepository;
@@ -29,12 +31,14 @@ import de.witchcafe.knownet.service.BeziehungService;
 
 @Route(value = "verknuepfungen", layout = MainLayout.class)
 @PageTitle("Verknüpfungen | Knownet")
+@AnonymousAllowed
 public class VerknuepfungenView extends VerticalLayout {
 
     private static final Logger log = LoggerFactory.getLogger(VerknuepfungenView.class);
 
     private final AussageRepository aussageRepository;
     private final BeziehungService beziehungService;
+    private final boolean kannBearbeiten;
 
     private final Grid<Beziehung> grid = new Grid<>(Beziehung.class, false);
     private final DbFehlerBanner fehlerBanner = new DbFehlerBanner(this::aktualisiere);
@@ -44,9 +48,12 @@ public class VerknuepfungenView extends VerticalLayout {
     private final ComboBox<Aussage> zuBox = new ComboBox<>("Aussage");
     private final TextField kommentarFeld = new TextField("Kommentar (optional)");
 
-    public VerknuepfungenView(AussageRepository aussageRepository, BeziehungService beziehungService) {
+    public VerknuepfungenView(AussageRepository aussageRepository,
+                               BeziehungService beziehungService,
+                               CurrentUser currentUser) {
         this.aussageRepository = aussageRepository;
         this.beziehungService = beziehungService;
+        this.kannBearbeiten = ViewSecurity.kannBearbeiten(currentUser);
 
         setSizeFull();
 
@@ -64,26 +71,26 @@ public class VerknuepfungenView extends VerticalLayout {
         HorizontalLayout formular = new HorizontalLayout(vonBox, artBox, zuBox, kommentarFeld, verknuepfen);
         formular.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
         formular.setWidthFull();
+        formular.setVisible(kannBearbeiten);
 
         grid.addColumn(Beziehung::getVonText).setHeader("Von Aussage").setFlexGrow(2);
         grid.addColumn(Beziehung::getArt).setHeader("Beziehung").setAutoWidth(true);
         grid.addColumn(Beziehung::getZuText).setHeader("Zu Aussage").setFlexGrow(2);
         grid.addColumn(Beziehung::getKommentar).setHeader("Kommentar").setFlexGrow(1);
 
-        grid.addComponentColumn(b -> {
-            Button bearbeiten = new Button("Bearbeiten", e -> oeffneBearbeitenDialog(b));
-            bearbeiten.addThemeVariants(ButtonVariant.LUMO_SMALL);
-
-            Button loeschen = new Button("Löschen", e -> bestaetigenUndLoeschen(b));
-            loeschen.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR);
-
-            HorizontalLayout aktionen = new HorizontalLayout(bearbeiten, loeschen);
-            aktionen.setSpacing(true);
-            return aktionen;
-        }).setHeader("Aktionen").setAutoWidth(true);
+        if (kannBearbeiten) {
+            grid.addComponentColumn(b -> {
+                Button bearbeiten = new Button("Bearbeiten", e -> oeffneBearbeitenDialog(b));
+                bearbeiten.addThemeVariants(ButtonVariant.LUMO_SMALL);
+                Button loeschen = new Button("Löschen", e -> bestaetigenUndLoeschen(b));
+                loeschen.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR);
+                HorizontalLayout aktionen = new HorizontalLayout(bearbeiten, loeschen);
+                aktionen.setSpacing(true);
+                return aktionen;
+            }).setHeader("Aktionen").setAutoWidth(true);
+        }
 
         grid.setSizeFull();
-
         add(fehlerBanner, formular, grid);
         aktualisiere();
     }
@@ -93,25 +100,21 @@ public class VerknuepfungenView extends VerticalLayout {
         dialog.setHeaderTitle("Verknüpfung bearbeiten");
         dialog.setWidth("40em");
 
-        TextField kommentarEdit = new TextField("Kommentar");
-        kommentarEdit.setWidthFull();
-        kommentarEdit.setValue(beziehung.getKommentar() != null ? beziehung.getKommentar() : "");
-
-        // Anzeige (nicht editierbar): Von / Art / Zu
         TextField vonAnzeige = new TextField("Von Aussage");
         vonAnzeige.setValue(beziehung.getVonText());
         vonAnzeige.setReadOnly(true);
         vonAnzeige.setWidthFull();
-
         TextField artAnzeige = new TextField("Beziehung");
         artAnzeige.setValue(beziehung.getArt());
         artAnzeige.setReadOnly(true);
         artAnzeige.setWidthFull();
-
         TextField zuAnzeige = new TextField("Zu Aussage");
         zuAnzeige.setValue(beziehung.getZuText());
         zuAnzeige.setReadOnly(true);
         zuAnzeige.setWidthFull();
+        TextField kommentarEdit = new TextField("Kommentar");
+        kommentarEdit.setWidthFull();
+        kommentarEdit.setValue(beziehung.getKommentar() != null ? beziehung.getKommentar() : "");
 
         FormLayout form = new FormLayout(vonAnzeige, artAnzeige, zuAnzeige, kommentarEdit);
         form.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1));
@@ -128,9 +131,7 @@ public class VerknuepfungenView extends VerticalLayout {
             }
         });
         speichern.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
         Button abbrechen = new Button("Abbrechen", e -> dialog.close());
-
         dialog.add(form);
         dialog.getFooter().add(abbrechen, speichern);
         dialog.open();
@@ -139,8 +140,7 @@ public class VerknuepfungenView extends VerticalLayout {
     private void bestaetigenUndLoeschen(Beziehung beziehung) {
         ConfirmDialog confirm = new ConfirmDialog();
         confirm.setHeader("Verknüpfung löschen?");
-        confirm.setText("Die Verknüpfung \"" + beziehung.getVonText()
-                + " → " + beziehung.getArt()
+        confirm.setText("\"" + beziehung.getVonText() + " → " + beziehung.getArt()
                 + " → " + beziehung.getZuText() + "\" wird gelöscht.");
         confirm.setCancelable(true);
         confirm.setCancelText("Abbrechen");
@@ -169,11 +169,8 @@ public class VerknuepfungenView extends VerticalLayout {
             return;
         }
         try {
-            beziehungService.verknuepfe(
-                    vonBox.getValue().getId(),
-                    zuBox.getValue().getId(),
-                    artBox.getValue(),
-                    kommentarFeld.getValue());
+            beziehungService.verknuepfe(vonBox.getValue().getId(), zuBox.getValue().getId(),
+                    artBox.getValue(), kommentarFeld.getValue());
             kommentarFeld.clear();
             aktualisiere();
             Notification.show("Verknüpfung angelegt");

@@ -8,7 +8,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.5</version>
+        <version>3.5.4</version>
         <relativePath/>
     </parent>
 
@@ -20,7 +20,7 @@
 
     <properties>
         <java.version>17</java.version>
-        <vaadin.version>24.3.11</vaadin.version>
+        <vaadin.version>24.8.5</vaadin.version>
     </properties>
 
     <dependencyManagement>
@@ -36,18 +36,52 @@
     </dependencyManagement>
 
     <dependencies>
+        <!-- Vaadin -->
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-spring-boot-starter</artifactId>
         </dependency>
+
+        <!-- Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+
+        <!-- Neo4j (Graph-Daten) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-neo4j</artifactId>
         </dependency>
+
+        <!-- JPA + H2 (Auth-Daten fuer witch-auth) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+        </dependency>
+
+        <!-- Security + OAuth2 (fuer witch-auth) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-client</artifactId>
+        </dependency>
+
+        <!-- witch-auth -->
+        <dependency>
+            <groupId>de.witchcafe</groupId>
+            <artifactId>witch-auth</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -76,8 +110,6 @@
         </plugins>
     </build>
 
-    <!-- Production-Profil: wird beim Docker-Build aktiviert (-Pproduction) -->
-    <!-- Baut das Vaadin-Frontend minifiziert und bettet es ins JAR ein -->
     <profiles>
         <profile>
             <id>production</id>

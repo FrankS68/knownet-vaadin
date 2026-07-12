@@ -20,19 +20,23 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 
+import de.witchcafe.auth.CurrentUser;
 import de.witchcafe.knownet.domain.Quelle;
 import de.witchcafe.knownet.repo.QuelleRepository;
 import de.witchcafe.knownet.service.SchlagwortService;
 
 @Route(value = "", layout = MainLayout.class)
 @PageTitle("Quellen | Knownet")
+@AnonymousAllowed
 public class QuellenView extends VerticalLayout {
 
     private static final Logger log = LoggerFactory.getLogger(QuellenView.class);
 
     private final QuelleRepository quelleRepository;
     private final SchlagwortService schlagwortService;
+    private final boolean kannBearbeiten;
 
     private final Grid<Quelle> grid = new Grid<>(Quelle.class, false);
     private final DbFehlerBanner fehlerBanner = new DbFehlerBanner(this::aktualisiere);
@@ -42,9 +46,12 @@ public class QuellenView extends VerticalLayout {
     private final TextField autorFeld = new TextField("Autor");
     private final TextField tagsFeld = new TextField("Schlagworte (kommasepariert)");
 
-    public QuellenView(QuelleRepository quelleRepository, SchlagwortService schlagwortService) {
+    public QuellenView(QuelleRepository quelleRepository,
+                       SchlagwortService schlagwortService,
+                       CurrentUser currentUser) {
         this.quelleRepository = quelleRepository;
         this.schlagwortService = schlagwortService;
+        this.kannBearbeiten = ViewSecurity.kannBearbeiten(currentUser);
 
         setSizeFull();
 
@@ -60,6 +67,7 @@ public class QuellenView extends VerticalLayout {
         HorizontalLayout formular = new HorizontalLayout(urlFeld, titelFeld, autorFeld, tagsFeld, speichern);
         formular.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
         formular.setWidthFull();
+        formular.setVisible(kannBearbeiten);
 
         grid.addColumn(Quelle::getTitel).setHeader("Titel").setAutoWidth(true);
         grid.addComponentColumn(q -> {
@@ -70,20 +78,19 @@ public class QuellenView extends VerticalLayout {
         grid.addColumn(Quelle::getAutor).setHeader("Autor").setAutoWidth(true);
         grid.addColumn(Quelle::getSchlagworteAlsText).setHeader("Schlagworte").setAutoWidth(true);
 
-        grid.addComponentColumn(quelle -> {
-            Button bearbeiten = new Button("Bearbeiten", e -> oeffneBearbeitenDialog(quelle));
-            bearbeiten.addThemeVariants(ButtonVariant.LUMO_SMALL);
-
-            Button loeschen = new Button("Löschen", e -> bestaetigenUndLoeschen(quelle));
-            loeschen.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR);
-
-            HorizontalLayout aktionen = new HorizontalLayout(bearbeiten, loeschen);
-            aktionen.setSpacing(true);
-            return aktionen;
-        }).setHeader("Aktionen").setAutoWidth(true);
+        if (kannBearbeiten) {
+            grid.addComponentColumn(quelle -> {
+                Button bearbeiten = new Button("Bearbeiten", e -> oeffneBearbeitenDialog(quelle));
+                bearbeiten.addThemeVariants(ButtonVariant.LUMO_SMALL);
+                Button loeschen = new Button("Löschen", e -> bestaetigenUndLoeschen(quelle));
+                loeschen.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR);
+                HorizontalLayout aktionen = new HorizontalLayout(bearbeiten, loeschen);
+                aktionen.setSpacing(true);
+                return aktionen;
+            }).setHeader("Aktionen").setAutoWidth(true);
+        }
 
         grid.setSizeFull();
-
         add(fehlerBanner, formular, grid);
         aktualisiere();
     }
@@ -96,15 +103,12 @@ public class QuellenView extends VerticalLayout {
         TextField urlEdit = new TextField("URL");
         urlEdit.setWidthFull();
         urlEdit.setValue(quelle.getUrl() != null ? quelle.getUrl() : "");
-
         TextField titelEdit = new TextField("Titel");
         titelEdit.setWidthFull();
         titelEdit.setValue(quelle.getTitel() != null ? quelle.getTitel() : "");
-
         TextField autorEdit = new TextField("Autor");
         autorEdit.setWidthFull();
         autorEdit.setValue(quelle.getAutor() != null ? quelle.getAutor() : "");
-
         TextField tagsEdit = new TextField("Schlagworte (kommasepariert)");
         tagsEdit.setWidthFull();
         tagsEdit.setValue(quelle.getSchlagworteAlsText());
@@ -128,9 +132,7 @@ public class QuellenView extends VerticalLayout {
             }
         });
         speichern.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
         Button abbrechen = new Button("Abbrechen", e -> dialog.close());
-
         dialog.add(form);
         dialog.getFooter().add(abbrechen, speichern);
         dialog.open();
@@ -158,20 +160,13 @@ public class QuellenView extends VerticalLayout {
     }
 
     private void speichereQuelle() {
-        if (urlFeld.isEmpty()) {
-            Notification.show("Bitte eine URL angeben");
-            return;
-        }
+        if (urlFeld.isEmpty()) { Notification.show("Bitte eine URL angeben"); return; }
         try {
             Quelle quelle = new Quelle(urlFeld.getValue().trim(),
-                    titelFeld.getValue().trim(),
-                    autorFeld.getValue().trim());
+                    titelFeld.getValue().trim(), autorFeld.getValue().trim());
             quelle.setSchlagworte(schlagwortService.ausKommaListe(tagsFeld.getValue()));
             quelleRepository.save(quelle);
-            urlFeld.clear();
-            titelFeld.clear();
-            autorFeld.clear();
-            tagsFeld.clear();
+            urlFeld.clear(); titelFeld.clear(); autorFeld.clear(); tagsFeld.clear();
             aktualisiere();
             Notification.show("Quelle gespeichert");
         } catch (RuntimeException e) {

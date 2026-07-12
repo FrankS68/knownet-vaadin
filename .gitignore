@@ -1,10 +1,15 @@
 target/
 neo4j-data/
+data/
 node_modules/
 frontend/generated/
 src/main/dev-bundle/
 .vaadin/
 vite.generated.ts
+
+# Lokale Konfiguration mit Secrets — nie einchecken!
+src/main/resources/application-local.properties
+src/main/resources/application-prod.properties
 
 # Eclipse
 .classpath
