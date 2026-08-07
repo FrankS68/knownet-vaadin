@@ -1,17 +1,19 @@
 services:
   neo4j:
-    image: neo4j:5
+    image: neo4j:5.25-community
     container_name: knownet-neo4j
-    ports:
-      - "7474:7474"
-      - "7687:7687"
     environment:
-      - NEO4J_AUTH=neo4j/knownet123
+      - NEO4J_AUTH=${NEO4J_USER}/${NEO4J_PASSWORD}
+      - NEO4J_dbms_memory_heap_initial__size=512m
+      - NEO4J_dbms_memory_heap_max__size=1g
     volumes:
       - neo4j-data:/data
+      - neo4j-logs:/logs
     restart: unless-stopped
+    networks:
+      - knownet-net
     healthcheck:
-      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "knownet123", "RETURN 1"]
+      test: ["CMD", "cypher-shell", "-u", "${NEO4J_USER}", "-p", "${NEO4J_PASSWORD}", "RETURN 1"]
       interval: 30s
       timeout: 10s
       retries: 10
@@ -25,16 +27,23 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_NEO4J_URI=bolt://neo4j:7687
-      - SPRING_NEO4J_AUTHENTICATION_USERNAME=neo4j
-      - SPRING_NEO4J_AUTHENTICATION_PASSWORD=knownet123
+      - SPRING_NEO4J_AUTHENTICATION_USERNAME=${NEO4J_USER}
+      - SPRING_NEO4J_AUTHENTICATION_PASSWORD=${NEO4J_PASSWORD}
+      - WITCHGAMES_GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - WITCHGAMES_GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
     volumes:
-      - ./config:/app/config
       - knownet-data:/app/data
     depends_on:
       neo4j:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - knownet-net
 
 volumes:
   neo4j-data:
+  neo4j-logs:
   knownet-data:
+
+networks:
+  knownet-net:
