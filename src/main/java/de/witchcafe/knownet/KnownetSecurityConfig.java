@@ -42,25 +42,6 @@ public class KnownetSecurityConfig {
         // API-Key Filter vor Standard-Auth
         http.addFilterBefore(apiKeyFilter, UsernamePasswordAuthenticationFilter.class);
 
-        http.with(VaadinSecurityConfigurer.vaadin(), cfg ->
-                cfg.loginView("login"));
-
-        http.oauth2Login(oauth2 -> oauth2
-                .loginPage("/login.html")
-                .defaultSuccessUrl("/", true)
-                .userInfoEndpoint(ui -> ui
-                        .userService(oauth2UserService())
-                        .oidcUserService(oidcUserService()))
-                .successHandler(oAuthUserService));
-
-        http.logout(logout -> logout
-                .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
-                .logoutSuccessUrl("/login.html")
-                .invalidateHttpSession(true)
-                .clearAuthentication(true)
-                .deleteCookies("JSESSIONID")
-                .permitAll());
-
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                         new AntPathRequestMatcher("/api/graph"),
@@ -79,6 +60,25 @@ public class KnownetSecurityConfig {
                         new AntPathRequestMatcher("/api/verknuepfungen/**"),
                         new AntPathRequestMatcher("/api/import/**")
                 ).authenticated());
+
+        http.with(VaadinSecurityConfigurer.vaadin(), cfg ->
+                cfg.loginView("login"));
+
+        http.oauth2Login(oauth2 -> oauth2
+                .loginPage("/login.html")
+                .defaultSuccessUrl("/", true)
+                .userInfoEndpoint(ui -> ui
+                        .userService(oauth2UserService())
+                        .oidcUserService(oidcUserService()))
+                .successHandler(oAuthUserService));
+
+        http.logout(logout -> logout
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
+                .logoutSuccessUrl("/login.html")
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .deleteCookies("JSESSIONID")
+                .permitAll());
 
         return http.build();
     }
