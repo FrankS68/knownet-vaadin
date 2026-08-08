@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -29,10 +30,21 @@ public class KnownetSecurityConfig {
 
     private final OAuthUserService oAuthUserService;
     private final ApiKeyFilter apiKeyFilter;
+    private final GraphApiBypassFilter graphApiBypassFilter;
 
-    public KnownetSecurityConfig(OAuthUserService oAuthUserService, ApiKeyFilter apiKeyFilter) {
+    public KnownetSecurityConfig(OAuthUserService oAuthUserService, ApiKeyFilter apiKeyFilter, GraphApiBypassFilter graphApiBypassFilter) {
         this.oAuthUserService = oAuthUserService;
         this.apiKeyFilter = apiKeyFilter;
+        this.graphApiBypassFilter = graphApiBypassFilter;
+    }
+
+    @Bean
+    @Order(0)
+    public SecurityFilterChain apiGraphFilterChain(HttpSecurity http) throws Exception {
+        http.securityMatcher("/api/graph", "/api/graph/**")
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .csrf(csrf -> csrf.disable());
+        return http.build();
     }
 
     @Bean

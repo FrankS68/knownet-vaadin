@@ -66,10 +66,28 @@ public class GraphView extends VerticalLayout {
             knLoadVis(function() {
                 window.knRenderGraph = function(apiUrl) {
                     fetch(apiUrl)
-                        .then(r => r.json())
+                        .then(r => {
+                            if (!r.ok) {
+                                throw new Error('API Error: ' + r.status + ' ' + r.statusText);
+                            }
+                            return r.text().then(text => {
+                                try {
+                                    return JSON.parse(text);
+                                } catch (e) {
+                                    if (text.includes('<!doctype') || text.includes('<html')) {
+                                        throw new Error('Authentifizierung erforderlich oder Server-Fehler');
+                                    }
+                                    throw new Error('Ungültige API-Antwort');
+                                }
+                            });
+                        })
                         .then(function(data) {
                             var container = document.getElementById('kn-graph');
                             if (!container) return;
+                            if (data.error) {
+                                container.innerHTML = '<div style="padding: 20px; color: #d32f2f; background: #ffebee; border-radius: 4px;"><strong>Fehler:</strong> ' + data.error + '</div>';
+                                return;
+                            }
                             var nodeMap = {};
                             var visNodes = data.nodes.map(function(n) {
                                 nodeMap[n.id] = true;

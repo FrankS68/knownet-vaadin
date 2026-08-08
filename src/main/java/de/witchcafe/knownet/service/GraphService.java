@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Liefert Graph-Daten fuer die Neovis-Visualisierung.
@@ -16,27 +18,30 @@ import org.springframework.stereotype.Service;
 @Service
 public class GraphService {
 
+    private static final Logger log = LoggerFactory.getLogger(GraphService.class);
     private final Neo4jClient client;
 
     public GraphService(Neo4jClient client) {
         this.client = client;
     }
 
-    public record GraphData(List<Map<String, Object>> nodes, List<Map<String, Object>> edges) {}
+    public record GraphData(List<Map<String, Object>> nodes, List<Map<String, Object>> edges, String error) {}
 
     /**
      * Gibt alle Aussagen, Quellen und Schlagworte zurueck,
      * optional gefiltert nach einem Suchbegriff.
+     * Falls Neo4j nicht erreichbar ist, wird ein Error-String zurueckgegeben.
      */
     public GraphData ladeGraph(String suche) {
         List<Map<String, Object>> nodes = new ArrayList<>();
         List<Map<String, Object>> edges = new ArrayList<>();
 
-        boolean mitFilter = suche != null && !suche.isBlank();
-        String filter = mitFilter ? suche.trim().toLowerCase() : null;
+        try {
+            boolean mitFilter = suche != null && !suche.isBlank();
+            String filter = mitFilter ? suche.trim().toLowerCase() : null;
 
-        // Aussagen laden
-        Collection<Map<String, Object>> aussagen = client.query(
+            // Aussagen laden
+            Collection<Map<String, Object>> aussagen = client.query(
                 "MATCH (a:Aussage) " +
                 (mitFilter ? "WHERE toLower(a.text) CONTAINS $suche " : "") +
                 "RETURN id(a) AS id, a.text AS text, 'Aussage' AS typ")
@@ -152,7 +157,12 @@ public class GraphService {
             ));
         }
 
-        return new GraphData(nodes, edges);
+            return new GraphData(nodes, edges, null);
+        } catch (Exception e) {
+            log.error("Fehler beim Laden des Graphen von Neo4j", e);
+            return new GraphData(new ArrayList<>(), new ArrayList<>(),
+                    "Neo4j Datenbank nicht erreichbar: " + e.getMessage());
+        }
     }
 
     private String kuerzen(String text, int maxLen) {
