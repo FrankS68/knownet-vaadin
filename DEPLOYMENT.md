@@ -46,7 +46,8 @@ Buildx verweigert Secrets außerhalb des Build-Kontexts.
 
 ### 1.4 nginx
 Konfiguration: [`deploy/nginx-knownet.segieth.cologne.conf`](deploy/nginx-knownet.segieth.cologne.conf)
-(Upstream `localhost:8082`).
+(Upstream `127.0.0.1:8082`). Die App ist nur lokal auf `127.0.0.1:8082` freigegeben
+(`docker-compose.yml`), von außen also ausschließlich über nginx erreichbar.
 ```bash
 sudo cp deploy/nginx-knownet.segieth.cologne.conf /etc/nginx/sites-available/knownet.segieth.cologne
 sudo ln -sf /etc/nginx/sites-available/knownet.segieth.cologne /etc/nginx/sites-enabled/
