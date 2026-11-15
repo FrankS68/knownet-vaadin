@@ -18,6 +18,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -27,7 +28,8 @@ import de.witchcafe.knownet.domain.Quelle;
 import de.witchcafe.knownet.repo.QuelleRepository;
 import de.witchcafe.knownet.service.SchlagwortService;
 
-@Route(value = "", layout = MainLayout.class)
+@Route("")
+@Menu(order = 0, icon = "vaadin:book", title = "Quellen")
 @PageTitle("Quellen | Knownet")
 @AnonymousAllowed
 public class QuellenView extends VerticalLayout {

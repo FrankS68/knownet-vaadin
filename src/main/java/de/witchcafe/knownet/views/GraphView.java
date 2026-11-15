@@ -6,11 +6,13 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
-@Route(value = "graph", layout = MainLayout.class)
+@Route("graph")
+@Menu(order = 3, icon = "vaadin:cluster", title = "Graph")
 @PageTitle("Graph | Knownet")
 @AnonymousAllowed
 public class GraphView extends VerticalLayout {

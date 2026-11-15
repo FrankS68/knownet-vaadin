@@ -1,6 +1,6 @@
 package de.witchcafe.knownet.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import de.witchcafe.knownet.domain.Aussage;
 import de.witchcafe.knownet.domain.BeziehungsArt;
 import de.witchcafe.knownet.domain.Quelle;

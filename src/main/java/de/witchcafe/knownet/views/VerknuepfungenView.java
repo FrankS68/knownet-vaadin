@@ -18,6 +18,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -29,7 +30,8 @@ import de.witchcafe.knownet.repo.AussageRepository;
 import de.witchcafe.knownet.service.Beziehung;
 import de.witchcafe.knownet.service.BeziehungService;
 
-@Route(value = "verknuepfungen", layout = MainLayout.class)
+@Route("verknuepfungen")
+@Menu(order = 2, icon = "vaadin:connect", title = "Verknüpfungen")
 @PageTitle("Verknüpfungen | Knownet")
 @AnonymousAllowed
 public class VerknuepfungenView extends VerticalLayout {

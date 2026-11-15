@@ -24,3 +24,6 @@ bin/
 # IntelliJ
 .idea/
 *.iml
+src/main/frontend/generated/
+testdata/
+.github_token

@@ -1,6 +1,6 @@
 services:
   neo4j:
-    image: neo4j:5.25-community
+    image: neo4j:5.26-community
     container_name: knownet-neo4j
     environment:
       - NEO4J_AUTH=${NEO4J_USER}/${NEO4J_PASSWORD}
@@ -21,6 +21,10 @@ services:
 
   knownet:
     image: knownet-vaadin:latest
+    build:
+      context: .
+      secrets:
+        - github_token
     container_name: knownet-app
     ports:
       - "8082:8082"
@@ -48,3 +52,8 @@ volumes:
 
 networks:
   knownet-net:
+
+# GitHub-Token (classic, read:packages) fuer den Build, siehe Dockerfile. Datei nicht einchecken.
+secrets:
+  github_token:
+    file: ./.github_token

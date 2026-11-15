@@ -19,6 +19,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -31,7 +32,8 @@ import de.witchcafe.knownet.repo.AussageRepository;
 import de.witchcafe.knownet.repo.QuelleRepository;
 import de.witchcafe.knownet.service.SchlagwortService;
 
-@Route(value = "aussagen", layout = MainLayout.class)
+@Route("aussagen")
+@Menu(order = 1, icon = "vaadin:comment-ellipsis", title = "Aussagen")
 @PageTitle("Aussagen | Knownet")
 @AnonymousAllowed
 public class AussagenView extends VerticalLayout {

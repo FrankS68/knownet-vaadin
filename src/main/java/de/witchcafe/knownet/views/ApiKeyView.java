@@ -13,6 +13,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
@@ -24,7 +25,8 @@ import jakarta.annotation.security.RolesAllowed;
 
 import java.time.format.DateTimeFormatter;
 
-@Route(value = "admin/apikeys", layout = MainLayout.class)
+@Route("admin/apikeys")
+@Menu(order = 91, icon = "vaadin:key-o", title = "API-Keys")
 @PageTitle("API-Keys | Knownet")
 @RolesAllowed(AppRoles.ADMIN)
 public class ApiKeyView extends VerticalLayout {
