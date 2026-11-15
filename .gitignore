@@ -27,3 +27,8 @@ bin/
 src/main/frontend/generated/
 testdata/
 .github_token
+
+# Deploy-Skript (Laufzeitdateien)
+.deploy.lock
+deploy.log
+deploy-history.tsv
