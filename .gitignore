@@ -31,3 +31,6 @@ testdata/
 .deploy.lock
 deploy.log
 deploy-history.tsv
+
+# Vaadin-Bundles (werden vom vaadin-maven-plugin erzeugt)
+src/main/bundles/
