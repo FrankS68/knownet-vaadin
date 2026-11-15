@@ -2,15 +2,22 @@ package de.witchcafe.knownet;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
+import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.page.AppShellConfigurator;
-import com.vaadin.flow.theme.Theme;
+import com.vaadin.flow.spring.annotation.EnableVaadin;
+import com.vaadin.flow.theme.lumo.Lumo;
 
 @SpringBootApplication
-@Theme("knownet")
-// JPA-Repos + Entities: witch-auth Benutzerverwaltung
+@StyleSheet(Lumo.STYLESHEET)
+@StyleSheet(Lumo.UTILITY_STYLESHEET)
+// "de.witchcafe" deckt Knownet, witch-auth (de.witchcafe.auth) und witch-ui (de.witchcafe.ui) ab
+@ComponentScan(basePackages = "de.witchcafe")
+@EnableVaadin("de.witchcafe")
+// JPA nur fuer die witch-auth-Benutzerdaten; die Knownet-Daten liegen in Neo4j (siehe Neo4jConfig)
 @EnableJpaRepositories(basePackages = "de.witchcafe.auth.domain")
 @EntityScan(basePackages = "de.witchcafe.auth.domain")
 public class KnownetApplication implements AppShellConfigurator {

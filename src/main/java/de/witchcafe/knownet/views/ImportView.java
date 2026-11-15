@@ -1,6 +1,6 @@
 package de.witchcafe.knownet.views;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Paragraph;
@@ -11,6 +11,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
+import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
@@ -20,7 +21,8 @@ import de.witchcafe.knownet.api.ImportApiController.ImportDaten;
 import de.witchcafe.knownet.api.ImportApiController.ImportErgebnis;
 import jakarta.annotation.security.RolesAllowed;
 
-@Route(value = "admin/import", layout = MainLayout.class)
+@Route("admin/import")
+@Menu(order = 92, icon = "vaadin:upload", title = "Import")
 @PageTitle("Import | Knownet")
 @RolesAllowed(AppRoles.ADMIN)
 public class ImportView extends VerticalLayout {

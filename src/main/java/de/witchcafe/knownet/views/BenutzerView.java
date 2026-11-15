@@ -14,6 +14,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
@@ -23,7 +24,8 @@ import de.witchcafe.auth.domain.UserManagementService;
 import de.witchcafe.knownet.KnownetRoles;
 import jakarta.annotation.security.RolesAllowed;
 
-@Route(value = "admin/benutzer", layout = MainLayout.class)
+@Route("admin/benutzer")
+@Menu(order = 90, icon = "vaadin:users", title = "Benutzer")
 @PageTitle("Benutzerverwaltung | Knownet")
 @RolesAllowed(AppRoles.ADMIN)
 public class BenutzerView extends VerticalLayout {
