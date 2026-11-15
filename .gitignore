@@ -9,7 +9,6 @@ vite.generated.ts
 
 # Lokale Konfiguration mit Secrets — nie einchecken!
 src/main/resources/application-local.properties
-src/main/resources/application-prod.properties
 .env
 .env.local
 .env.*.local
