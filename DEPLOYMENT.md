@@ -48,11 +48,20 @@ Buildx verweigert Secrets außerhalb des Build-Kontexts.
 Konfiguration: [`deploy/nginx-knownet.segieth.cologne.conf`](deploy/nginx-knownet.segieth.cologne.conf)
 (Upstream `127.0.0.1:8082`). Die App ist nur lokal auf `127.0.0.1:8082` freigegeben
 (`docker-compose.yml`), von außen also ausschließlich über nginx erreichbar.
+
+nginx liefert `https://knownet.segieth.cologne` mit dem Wildcard-Zertifikat `*.segieth.cologne`
+aus `/etc/nginx/ssl/segieth.cologne/` aus (gemeinsam mit games und quiz) und leitet HTTP auf
+HTTPS um. Die App übernimmt `X-Forwarded-Proto` (`server.forward-headers-strategy=native`),
+damit Redirects wie der OAuth-Login `https://` verwenden.
 ```bash
 sudo cp deploy/nginx-knownet.segieth.cologne.conf /etc/nginx/sites-available/knownet.segieth.cologne
 sudo ln -sf /etc/nginx/sites-available/knownet.segieth.cologne /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 ```
+
+In der GitHub-OAuth-App (<https://github.com/settings/developers>) als
+Authorization callback URL eintragen:
+`https://knownet.segieth.cologne/login/oauth2/code/github`
 
 ## 2. Ausrollen
 
