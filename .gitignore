@@ -5,6 +5,7 @@ node_modules/
 frontend/generated/
 src/main/dev-bundle/
 .vaadin/
+.eclipse/
 vite.generated.ts
 
 # Lokale Konfiguration mit Secrets — nie einchecken!
