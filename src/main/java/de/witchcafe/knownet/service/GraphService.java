@@ -157,6 +157,21 @@ public class GraphService {
             ));
         }
 
+        // Kanten: Schlagwort -> Oberbegriff (Hierarchie)
+        Collection<Map<String, Object>> hierarchie = client.query(
+                "MATCH (u:Schlagwort)-[:UNTERBEGRIFF_VON]->(o:Schlagwort) RETURN id(u) AS von, id(o) AS zu")
+                .fetch().all();
+
+        for (Map<String, Object> r : hierarchie) {
+            edges.add(Map.of(
+                    "id", "SU_" + r.get("von") + "_" + r.get("zu"),
+                    "from", "S_" + r.get("von"),
+                    "to", "S_" + r.get("zu"),
+                    "label", "unterbegriff von",
+                    "title", ""
+            ));
+        }
+
             return new GraphData(nodes, edges, null);
         } catch (Exception e) {
             log.error("Fehler beim Laden des Graphen von Neo4j", e);

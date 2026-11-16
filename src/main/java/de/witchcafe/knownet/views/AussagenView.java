@@ -47,6 +47,8 @@ public class AussagenView extends VerticalLayout {
 
     private final Grid<Aussage> grid = new Grid<>(Aussage.class, false);
     private final DbFehlerBanner fehlerBanner = new DbFehlerBanner(this::aktualisiere);
+    private boolean filterWirdGesetzt;
+    private final ComboBox<String> filterBox = new ComboBox<>("Filter: Schlagwort inkl. Unterbegriffe");
 
     private final TextArea textFeld = new TextArea("Aussage");
     private final ComboBox<Quelle> quelleBox = new ComboBox<>("Quelle (optional)");
@@ -74,7 +76,7 @@ public class AussagenView extends VerticalLayout {
         fundstelleFeld.setWidth("12em");
         fundstelleFeld.setPlaceholder("S. 12 / 03:41 / Kap. 2");
         tagsFeld.setWidth("16em");
-        tagsFeld.setPlaceholder("kommasepariert");
+        tagsFeld.setPlaceholder("kommasepariert, Hierarchie mit /");
 
         Button speichern = new Button("Aussage hinzufügen", e -> speichereAussage());
         speichern.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -103,8 +105,17 @@ public class AussagenView extends VerticalLayout {
             }).setHeader("Aktionen").setAutoWidth(true);
         }
 
+        filterBox.setWidth("24em");
+        filterBox.setClearButtonVisible(true);
+        filterBox.setPlaceholder("alle");
+        filterBox.addValueChangeListener(e -> {
+            if (!filterWirdGesetzt) {
+                aktualisiere();
+            }
+        });
+
         grid.setSizeFull();
-        add(fehlerBanner, textFeld, zeile, grid);
+        add(fehlerBanner, textFeld, zeile, filterBox, grid);
         aktualisiere();
     }
 
@@ -117,7 +128,7 @@ public class AussagenView extends VerticalLayout {
         textEdit.setWidthFull();
         textEdit.setMinHeight("6em");
         textEdit.setValue(aussage.getText() != null ? aussage.getText() : "");
-        TextField tagsEdit = new TextField("Schlagworte (kommasepariert)");
+        TextField tagsEdit = new TextField("Schlagworte (kommasepariert, Hierarchie mit /)");
         tagsEdit.setWidthFull();
         tagsEdit.setValue(aussage.getSchlagworteAlsText());
 
@@ -188,7 +199,18 @@ public class AussagenView extends VerticalLayout {
 
     private void aktualisiere() {
         try {
-            grid.setItems(aussageRepository.findAll());
+            String filter = filterBox.getValue();
+            grid.setItems(filter == null
+                    ? aussageRepository.findAll()
+                    : aussageRepository.findAllById(schlagwortService.idsMitSchlagwortOderUnterbegriff("Aussage", filter)));
+            // Schlagwortliste auffrischen, ohne dass das Neusetzen erneut laedt
+            filterWirdGesetzt = true;
+            try {
+                filterBox.setItems(schlagwortService.alleNamen());
+                filterBox.setValue(filter);
+            } finally {
+                filterWirdGesetzt = false;
+            }
             quelleBox.setItems(quelleRepository.findAll());
             fehlerBanner.setVisible(false);
         } catch (RuntimeException e) {

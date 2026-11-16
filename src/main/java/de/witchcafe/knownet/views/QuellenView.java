@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -42,11 +43,13 @@ public class QuellenView extends VerticalLayout {
 
     private final Grid<Quelle> grid = new Grid<>(Quelle.class, false);
     private final DbFehlerBanner fehlerBanner = new DbFehlerBanner(this::aktualisiere);
+    private boolean filterWirdGesetzt;
+    private final ComboBox<String> filterBox = new ComboBox<>("Filter: Schlagwort inkl. Unterbegriffe");
 
     private final TextField urlFeld = new TextField("URL");
     private final TextField titelFeld = new TextField("Titel");
     private final TextField autorFeld = new TextField("Autor");
-    private final TextField tagsFeld = new TextField("Schlagworte (kommasepariert)");
+    private final TextField tagsFeld = new TextField("Schlagworte (kommasepariert, Hierarchie mit /)");
 
     public QuellenView(QuelleRepository quelleRepository,
                        SchlagwortService schlagwortService,
@@ -61,7 +64,7 @@ public class QuellenView extends VerticalLayout {
         urlFeld.setPlaceholder("https://...");
         titelFeld.setWidth("20em");
         tagsFeld.setWidth("20em");
-        tagsFeld.setPlaceholder("klima, energie, politik");
+        tagsFeld.setPlaceholder("energie, weltwirtschaft/europawirtschaft");
 
         Button speichern = new Button("Quelle hinzufügen", e -> speichereQuelle());
         speichern.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -92,8 +95,17 @@ public class QuellenView extends VerticalLayout {
             }).setHeader("Aktionen").setAutoWidth(true);
         }
 
+        filterBox.setWidth("24em");
+        filterBox.setClearButtonVisible(true);
+        filterBox.setPlaceholder("alle");
+        filterBox.addValueChangeListener(e -> {
+            if (!filterWirdGesetzt) {
+                aktualisiere();
+            }
+        });
+
         grid.setSizeFull();
-        add(fehlerBanner, formular, grid);
+        add(fehlerBanner, formular, filterBox, grid);
         aktualisiere();
     }
 
@@ -111,7 +123,7 @@ public class QuellenView extends VerticalLayout {
         TextField autorEdit = new TextField("Autor");
         autorEdit.setWidthFull();
         autorEdit.setValue(quelle.getAutor() != null ? quelle.getAutor() : "");
-        TextField tagsEdit = new TextField("Schlagworte (kommasepariert)");
+        TextField tagsEdit = new TextField("Schlagworte (kommasepariert, Hierarchie mit /)");
         tagsEdit.setWidthFull();
         tagsEdit.setValue(quelle.getSchlagworteAlsText());
 
@@ -179,7 +191,18 @@ public class QuellenView extends VerticalLayout {
 
     private void aktualisiere() {
         try {
-            grid.setItems(quelleRepository.findAll());
+            String filter = filterBox.getValue();
+            grid.setItems(filter == null
+                    ? quelleRepository.findAll()
+                    : quelleRepository.findAllById(schlagwortService.idsMitSchlagwortOderUnterbegriff("Quelle", filter)));
+            // Schlagwortliste auffrischen, ohne dass das Neusetzen erneut laedt
+            filterWirdGesetzt = true;
+            try {
+                filterBox.setItems(schlagwortService.alleNamen());
+                filterBox.setValue(filter);
+            } finally {
+                filterWirdGesetzt = false;
+            }
             fehlerBanner.setVisible(false);
         } catch (RuntimeException e) {
             log.error("Laden fehlgeschlagen", e);
