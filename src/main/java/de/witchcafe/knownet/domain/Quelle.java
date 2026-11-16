@@ -24,6 +24,12 @@ public class Quelle {
     /** Wer die Quelle angelegt hat: E-Mail, sonst User-ID des Anbieters (z.B. "bluesky:did:plc:..."), bei API-Keys "API: <Key-Name>". */
     private String erstelltVon;
 
+    /** Geschaetzte Wahrscheinlichkeit (0-100 %), dass der Inhalt KI-generiert ist; null = noch nicht bewertet. */
+    private Integer kiWahrscheinlichkeit;
+    private String kiBegruendung;
+    private String kiBewertetVon;
+    private LocalDateTime kiBewertetAm;
+
     @Relationship(type = "HAT_SCHLAGWORT")
     private Set<Schlagwort> schlagworte = new HashSet<>();
 
@@ -78,6 +84,32 @@ public class Quelle {
 
     public void setErstelltVon(String erstelltVon) {
         this.erstelltVon = erstelltVon;
+    }
+
+    public Integer getKiWahrscheinlichkeit() {
+        return kiWahrscheinlichkeit;
+    }
+
+    public String getKiBegruendung() {
+        return kiBegruendung;
+    }
+
+    public String getKiBewertetVon() {
+        return kiBewertetVon;
+    }
+
+    public LocalDateTime getKiBewertetAm() {
+        return kiBewertetAm;
+    }
+
+    public void setzeKiBewertung(int wahrscheinlichkeit, String begruendung, String bewertetVon) {
+        if (wahrscheinlichkeit < 0 || wahrscheinlichkeit > 100) {
+            throw new IllegalArgumentException("KI-Wahrscheinlichkeit muss zwischen 0 und 100 liegen");
+        }
+        this.kiWahrscheinlichkeit = wahrscheinlichkeit;
+        this.kiBegruendung = begruendung;
+        this.kiBewertetVon = bewertetVon;
+        this.kiBewertetAm = LocalDateTime.now();
     }
 
     public Set<Schlagwort> getSchlagworte() {

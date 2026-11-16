@@ -88,6 +88,12 @@ public class QuellenView extends VerticalLayout {
         grid.addColumn(Quelle::getAutor).setHeader("Autor").setAutoWidth(true);
         grid.addColumn(Quelle::getSchlagworteAlsText).setHeader("Schlagworte").setAutoWidth(true);
         DateTimeFormatter datumFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+        grid.addColumn(q -> q.getKiWahrscheinlichkeit() != null ? q.getKiWahrscheinlichkeit() + " %" : "–")
+                .setHeader("KI-Wahrscheinlichkeit").setAutoWidth(true)
+                .setComparator(q -> q.getKiWahrscheinlichkeit() != null ? q.getKiWahrscheinlichkeit() : -1)
+                .setTooltipGenerator(q -> q.getKiWahrscheinlichkeit() == null ? "noch nicht bewertet"
+                        : q.getKiBegruendung() + " (" + q.getKiBewertetVon()
+                          + (q.getKiBewertetAm() != null ? ", " + q.getKiBewertetAm().format(datumFormat) : "") + ")");
         grid.addColumn(q -> q.getErstelltVon() != null ? q.getErstelltVon() : "–")
                 .setHeader("Erstellt von").setAutoWidth(true).setSortable(true);
         grid.addColumn(q -> q.getErfasstAm() != null ? q.getErfasstAm().format(datumFormat) : "")
