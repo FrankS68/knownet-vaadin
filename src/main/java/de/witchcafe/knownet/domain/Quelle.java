@@ -21,7 +21,7 @@ public class Quelle {
     private String titel;
     private String autor;
     private LocalDateTime erfasstAm = LocalDateTime.now();
-    /** Wer die Quelle angelegt hat (Benutzername oder "API: <Key-Name>"). */
+    /** Wer die Quelle angelegt hat: E-Mail, sonst User-ID des Anbieters (z.B. "bluesky:did:plc:..."), bei API-Keys "API: <Key-Name>". */
     private String erstelltVon;
 
     @Relationship(type = "HAT_SCHLAGWORT")

@@ -20,8 +20,10 @@ public class ErstellerService {
             return null;
         }
         if (auth.getPrincipal() instanceof AppUserPrincipal p) {
-            String name = p.getAppUser().getFullName();
-            return name != null && !name.isBlank() ? name : p.getAppUser().getPreferredUsername();
+            // Kennung statt Anzeigename: E-Mail, sonst die User-ID des Anbieters
+            // (z.B. "bluesky:did:plc:..." oder "github:12345")
+            String email = p.getAppUser().getEmail();
+            return email != null && !email.isBlank() ? email : p.getAppUser().getUserId().toString();
         }
         // ApiKeyFilter setzt den Namen des API-Keys als Principal
         return "API: " + auth.getName();
