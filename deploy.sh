@@ -12,7 +12,10 @@
 # BACKUP_DIR (~/backups/knownet), BACKUP_KEEP (Anzahl Sicherungen je Volume, 10).
 set -euo pipefail
 
-cd "$(dirname "$(readlink -f "$0")")"
+SELF=$(readlink -f "$0")
+cd "$(dirname "$SELF")"
+# Pruefsumme der laufenden Fassung, siehe Neustart nach dem git-Schritt
+SELF_SUM=$(sha256sum < "$SELF")
 
 IMAGE=knownet-vaadin
 APP=knownet-app
@@ -103,6 +106,13 @@ elif git show-ref -q --verify "refs/remotes/origin/$REF"; then
     git pull -q --ff-only
 else
     git checkout -q "$REF"   # Tag oder Commit (detached)
+fi
+# git pull kann deploy.sh selbst aktualisiert haben. bash fuehrt aber die bereits geoeffnete
+# alte Fassung weiter aus - deshalb in dem Fall die neue Fassung mit denselben Argumenten starten.
+if [[ $(sha256sum < "$SELF") != "$SELF_SUM" && -z ${DEPLOY_RESTARTED:-} ]]; then
+    log "deploy.sh wurde aktualisiert - starte die neue Fassung"
+    exec 9>&-   # Sperre freigeben, die neue Fassung holt sie sich selbst
+    DEPLOY_RESTARTED=1 exec "$SELF" "$@"
 fi
 SHA=$(git rev-parse --short HEAD)
 log "Stand: $REF @ $SHA ($(git log -1 --format=%s))"
