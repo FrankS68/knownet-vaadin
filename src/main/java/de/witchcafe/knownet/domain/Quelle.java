@@ -21,6 +21,8 @@ public class Quelle {
     private String titel;
     private String autor;
     private LocalDateTime erfasstAm = LocalDateTime.now();
+    /** Wer die Quelle angelegt hat (Benutzername oder "API: <Key-Name>"). */
+    private String erstelltVon;
 
     @Relationship(type = "HAT_SCHLAGWORT")
     private Set<Schlagwort> schlagworte = new HashSet<>();
@@ -68,6 +70,14 @@ public class Quelle {
 
     public void setErfasstAm(LocalDateTime erfasstAm) {
         this.erfasstAm = erfasstAm;
+    }
+
+    public String getErstelltVon() {
+        return erstelltVon;
+    }
+
+    public void setErstelltVon(String erstelltVon) {
+        this.erstelltVon = erstelltVon;
     }
 
     public Set<Schlagwort> getSchlagworte() {

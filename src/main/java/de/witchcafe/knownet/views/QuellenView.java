@@ -1,5 +1,6 @@
 package de.witchcafe.knownet.views;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -27,6 +28,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import de.witchcafe.auth.CurrentUser;
 import de.witchcafe.knownet.domain.Quelle;
 import de.witchcafe.knownet.repo.QuelleRepository;
+import de.witchcafe.knownet.service.ErstellerService;
 import de.witchcafe.knownet.service.SchlagwortService;
 
 @Route("")
@@ -39,6 +41,7 @@ public class QuellenView extends VerticalLayout {
 
     private final QuelleRepository quelleRepository;
     private final SchlagwortService schlagwortService;
+    private final ErstellerService erstellerService;
     private final boolean kannBearbeiten;
 
     private final Grid<Quelle> grid = new Grid<>(Quelle.class, false);
@@ -53,9 +56,11 @@ public class QuellenView extends VerticalLayout {
 
     public QuellenView(QuelleRepository quelleRepository,
                        SchlagwortService schlagwortService,
+                       ErstellerService erstellerService,
                        CurrentUser currentUser) {
         this.quelleRepository = quelleRepository;
         this.schlagwortService = schlagwortService;
+        this.erstellerService = erstellerService;
         this.kannBearbeiten = ViewSecurity.kannBearbeiten(currentUser);
 
         setSizeFull();
@@ -82,6 +87,12 @@ public class QuellenView extends VerticalLayout {
         }).setHeader("URL").setFlexGrow(1);
         grid.addColumn(Quelle::getAutor).setHeader("Autor").setAutoWidth(true);
         grid.addColumn(Quelle::getSchlagworteAlsText).setHeader("Schlagworte").setAutoWidth(true);
+        DateTimeFormatter datumFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+        grid.addColumn(q -> q.getErstelltVon() != null ? q.getErstelltVon() : "–")
+                .setHeader("Erstellt von").setAutoWidth(true).setSortable(true);
+        grid.addColumn(q -> q.getErfasstAm() != null ? q.getErfasstAm().format(datumFormat) : "")
+                .setHeader("Erfasst am").setAutoWidth(true)
+                .setComparator(q -> q.getErfasstAm() != null ? q.getErfasstAm() : java.time.LocalDateTime.MIN);
 
         if (kannBearbeiten) {
             grid.addComponentColumn(quelle -> {
@@ -178,6 +189,7 @@ public class QuellenView extends VerticalLayout {
         try {
             Quelle quelle = new Quelle(urlFeld.getValue().trim(),
                     titelFeld.getValue().trim(), autorFeld.getValue().trim());
+            quelle.setErstelltVon(erstellerService.aktuellerErsteller());
             quelle.setSchlagworte(schlagwortService.ausKommaListe(tagsFeld.getValue()));
             quelleRepository.save(quelle);
             urlFeld.clear(); titelFeld.clear(); autorFeld.clear(); tagsFeld.clear();

@@ -8,6 +8,7 @@ import de.witchcafe.knownet.domain.StammtAus;
 import de.witchcafe.knownet.repo.AussageRepository;
 import de.witchcafe.knownet.repo.QuelleRepository;
 import de.witchcafe.knownet.service.BeziehungService;
+import de.witchcafe.knownet.service.ErstellerService;
 import de.witchcafe.knownet.service.SchlagwortService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,17 +39,20 @@ public class ImportApiController {
     private final BeziehungService beziehungService;
     private final SchlagwortService schlagwortService;
     private final ObjectMapper objectMapper;
+    private final ErstellerService erstellerService;
 
     public ImportApiController(QuelleRepository quelleRepository,
                                AussageRepository aussageRepository,
                                BeziehungService beziehungService,
                                SchlagwortService schlagwortService,
-                               ObjectMapper objectMapper) {
+                               ObjectMapper objectMapper,
+                               ErstellerService erstellerService) {
         this.quelleRepository = quelleRepository;
         this.aussageRepository = aussageRepository;
         this.beziehungService = beziehungService;
         this.schlagwortService = schlagwortService;
         this.objectMapper = objectMapper;
+        this.erstellerService = erstellerService;
     }
 
     /** JSON direkt als Body */
@@ -75,12 +79,14 @@ public class ImportApiController {
         Map<String, Long> aussageIds = new HashMap<>();
         List<String> fehler = new ArrayList<>();
         int quellen = 0, aussagen = 0, verknuepfungen = 0;
+        String ersteller = erstellerService.aktuellerErsteller();
 
         // Quellen
         if (daten.quellen() != null) {
             for (var q : daten.quellen()) {
                 try {
                     Quelle quelle = new Quelle(q.url(), q.titel(), q.autor());
+                    quelle.setErstelltVon(ersteller);
                     if (q.schlagworte() != null)
                         quelle.setSchlagworte(schlagwortService.ausKommaListe(q.schlagworte()));
                     quelle = quelleRepository.save(quelle);
