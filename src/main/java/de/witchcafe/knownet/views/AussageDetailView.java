@@ -22,6 +22,7 @@ import de.witchcafe.knownet.domain.Aussage;
 import de.witchcafe.knownet.domain.Schlagwort;
 import de.witchcafe.knownet.domain.StammtAus;
 import de.witchcafe.knownet.repo.AussageRepository;
+import de.witchcafe.knownet.service.FrageService;
 import de.witchcafe.knownet.service.ZusammenhangService;
 import de.witchcafe.knownet.service.ZusammenhangService.AussageBeziehung;
 
@@ -34,15 +35,18 @@ public class AussageDetailView extends VerticalLayout implements HasUrlParameter
 
     private final AussageRepository aussageRepository;
     private final ZusammenhangService zusammenhang;
+    private final FrageService frageService;
 
     private final DbFehlerBanner fehlerBanner = new DbFehlerBanner(this::lade);
     private final VerticalLayout inhalt = new VerticalLayout();
     private Long id;
     private String titel = "Aussage";
 
-    public AussageDetailView(AussageRepository aussageRepository, ZusammenhangService zusammenhang) {
+    public AussageDetailView(AussageRepository aussageRepository, ZusammenhangService zusammenhang,
+                             FrageService frageService) {
         this.aussageRepository = aussageRepository;
         this.zusammenhang = zusammenhang;
+        this.frageService = frageService;
         inhalt.setPadding(false);
         inhalt.setSpacing(false);
         inhalt.setMaxWidth("60em");
@@ -81,6 +85,10 @@ public class AussageDetailView extends VerticalLayout implements HasUrlParameter
         Paragraph text = new Paragraph(a.getText());
         text.getStyle().set("font-size", "var(--lumo-font-size-xl)").set("margin", "0.3em 0 0.8em 0");
         inhalt.add(new RouterLink("← Alle Aussagen", AussagenView.class), new H2("Aussage"), text);
+        frageService.frageZuAussage(a.getId()).ifPresent(frageId ->
+                inhalt.add(Verweise.feld("Recherchefrage",
+                        new RouterLink("Diese Aussage ist eine Frage an die Agenten – Frage ansehen",
+                                FrageDetailView.class, frageId))));
 
         if (a.getErstelltAm() != null) {
             inhalt.add(Verweise.feld("Erfasst", new Span(a.getErstelltAm().format(QuelleDetailView.DATUM))));

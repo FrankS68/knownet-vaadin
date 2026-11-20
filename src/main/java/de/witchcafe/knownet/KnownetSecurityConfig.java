@@ -25,11 +25,11 @@ public class KnownetSecurityConfig {
         this.apiKeyFilter = apiKeyFilter;
     }
 
-    /** Graph-API: oeffentlich lesbar (GraphView und externe Clients). */
+    /** Graph-API und API-Doku: oeffentlich lesbar (GraphView, externe Clients, Agenten ohne Key). */
     @Bean
     @Order(0)
     public SecurityFilterChain apiGraphFilterChain(HttpSecurity http) throws Exception {
-        http.securityMatcher("/api/graph", "/api/graph/**")
+        http.securityMatcher("/api/graph", "/api/graph/**", "/api/docs", "/api/docs/**")
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .csrf(csrf -> csrf.disable());
         return http.build();

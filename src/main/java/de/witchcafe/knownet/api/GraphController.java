@@ -1,5 +1,7 @@
 package de.witchcafe.knownet.api;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -12,6 +14,7 @@ import de.witchcafe.knownet.service.GraphService.GraphData;
 
 @RestController
 @RequestMapping("/api/graph")
+@Tag(name = "Graph", description = "Knoten und Kanten fuer die Graph-Anzeige (ohne API-Key)")
 public class GraphController {
 
     private final GraphService graphService;
@@ -21,6 +24,7 @@ public class GraphController {
     }
 
     @GetMapping
+    @Operation(summary = "Graph, optional gefiltert nach Suchbegriff")
     // Öffentlicher Endpoint - wird durch SecurityFilterChain mit @Order(0) erlaubt
     public GraphData graph(@RequestParam(required = false) String suche) {
         return graphService.ladeGraph(suche);

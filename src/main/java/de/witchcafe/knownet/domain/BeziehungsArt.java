@@ -18,7 +18,11 @@ public enum BeziehungsArt {
     SETZT_VORAUS("setzt voraus"),
     FOLGT_AUS("folgt aus"),
     VERANSCHAULICHT("veranschaulicht"),
-    ERSETZT("ersetzt");
+    ERSETZT("ersetzt"),
+    /** Aussage beantwortet (ganz oder teilweise) eine Frage-Aussage. */
+    BEANTWORTET("beantwortet"),
+    /** Aussage gehoert zum Kontext einer Frage-Aussage, ohne sie direkt zu beantworten. */
+    BETRIFFT("betrifft");
 
     private final String anzeigeName;
 

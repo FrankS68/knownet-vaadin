@@ -1,5 +1,7 @@
 package de.witchcafe.knownet.api;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import tools.jackson.databind.ObjectMapper;
 import de.witchcafe.knownet.domain.Aussage;
 import de.witchcafe.knownet.domain.BeziehungsArt;
@@ -26,10 +28,14 @@ import java.util.*;
  *   "quellen": [{"ref":"q1","url":"...","titel":"...","autor":"...","schlagworte":"..."}],
  *   "aussagen": [{"ref":"a1","text":"...","schlagworte":"...","quelleRef":"q1","zitat":"...","fundstelle":"..."}],
  *   "verknuepfungen": [{"vonRef":"a1","zuRef":"a2","art":"BESTAETIGT","kommentar":"..."}]
+ * Statt einer Ref duerfen vorhandene Knoten per ID angegeben werden: Aussage "quelleId",
+ * Verknuepfung "vonId"/"zuId" (z.B. die aussageId einer Recherchefrage).
+ * Das Ergebnis enthaelt die IDs der angelegten Knoten je Ref.
  * }
  */
 @RestController
 @RequestMapping("/api/import")
+@Tag(name = "Import", description = "Quellen, Aussagen und Verknuepfungen in einem Aufruf anlegen")
 public class ImportApiController {
 
     private static final Logger log = LoggerFactory.getLogger(ImportApiController.class);
@@ -57,12 +63,16 @@ public class ImportApiController {
 
     /** JSON direkt als Body */
     @PostMapping(consumes = "application/json")
+    @Operation(summary = "Import als JSON-Body",
+            description = "Refs verbinden Eintraege innerhalb des Imports; vorhandene Knoten per quelleId bzw. vonId/zuId. "
+                    + "Ergebnis: Anzahlen, fehler, quelleIds und aussageIds (Ref -> ID).")
     public ResponseEntity<ImportErgebnis> importJson(@RequestBody ImportDaten daten) {
         return ResponseEntity.ok(verarbeite(daten));
     }
 
     /** Datei-Upload (multipart/form-data, field: "file") */
     @PostMapping(consumes = "multipart/form-data")
+    @Operation(summary = "Import als Datei-Upload (Feld 'file', gleiches JSON-Format)")
     public ResponseEntity<ImportErgebnis> importDatei(@RequestParam("file") MultipartFile file) {
         try {
             ImportDaten daten = objectMapper.readValue(file.getInputStream(), ImportDaten.class);
@@ -70,7 +80,8 @@ public class ImportApiController {
         } catch (Exception e) {
             log.error("Import fehlgeschlagen", e);
             return ResponseEntity.badRequest()
-                    .body(new ImportErgebnis(0, 0, 0, List.of("Fehler beim Parsen: " + e.getMessage())));
+                    .body(new ImportErgebnis(0, 0, 0, List.of("Fehler beim Parsen: " + e.getMessage()),
+                            Map.of(), Map.of()));
         }
     }
 
@@ -105,8 +116,10 @@ public class ImportApiController {
                     Aussage aussage = new Aussage(a.text());
                     if (a.schlagworte() != null)
                         aussage.setSchlagworte(schlagwortService.ausKommaListe(a.schlagworte()));
-                    if (a.quelleRef() != null && quelleIds.containsKey(a.quelleRef())) {
-                        quelleRepository.findById(quelleIds.get(a.quelleRef())).ifPresent(q ->
+                    Long quelleId = a.quelleRef() != null && quelleIds.containsKey(a.quelleRef())
+                            ? quelleIds.get(a.quelleRef()) : a.quelleId();
+                    if (quelleId != null) {
+                        quelleRepository.findById(quelleId).ifPresent(q ->
                             aussage.getQuellen().add(new StammtAus(q,
                                 a.zitat() != null ? a.zitat() : "",
                                 a.fundstelle() != null ? a.fundstelle() : "")));
@@ -124,10 +137,12 @@ public class ImportApiController {
         if (daten.verknuepfungen() != null) {
             for (var v : daten.verknuepfungen()) {
                 try {
-                    Long vonId = aussageIds.get(v.vonRef());
-                    Long zuId  = aussageIds.get(v.zuRef());
-                    if (vonId == null) { fehler.add("vonRef '" + v.vonRef() + "' nicht gefunden"); continue; }
-                    if (zuId  == null) { fehler.add("zuRef '"  + v.zuRef()  + "' nicht gefunden"); continue; }
+                    Long vonId = v.vonRef() != null ? aussageIds.get(v.vonRef()) : v.vonId();
+                    Long zuId  = v.zuRef()  != null ? aussageIds.get(v.zuRef())  : v.zuId();
+                    if (vonId == null) { fehler.add("vonRef '" + v.vonRef() + "' / vonId nicht gefunden"); continue; }
+                    if (zuId  == null) { fehler.add("zuRef '"  + v.zuRef()  + "' / zuId nicht gefunden"); continue; }
+                    if (v.vonRef() == null && !aussageRepository.existsById(vonId)) { fehler.add("vonId " + vonId + " existiert nicht"); continue; }
+                    if (v.zuRef()  == null && !aussageRepository.existsById(zuId))  { fehler.add("zuId "  + zuId  + " existiert nicht"); continue; }
                     BeziehungsArt art = BeziehungsArt.valueOf(v.art().toUpperCase());
                     beziehungService.verknuepfe(vonId, zuId, art,
                             v.kommentar() != null ? v.kommentar() : "");
@@ -142,7 +157,7 @@ public class ImportApiController {
 
         log.info("Import: {} Quellen, {} Aussagen, {} Verknüpfungen, {} Fehler",
                 quellen, aussagen, verknuepfungen, fehler.size());
-        return new ImportErgebnis(quellen, aussagen, verknuepfungen, fehler);
+        return new ImportErgebnis(quellen, aussagen, verknuepfungen, fehler, quelleIds, aussageIds);
     }
 
     public record ImportDaten(
@@ -155,14 +170,16 @@ public class ImportApiController {
 
     public record AussageImport(
             String ref, String text, String schlagworte,
-            String quelleRef, String zitat, String fundstelle) {}
+            String quelleRef, String zitat, String fundstelle, Long quelleId) {}
 
     public record VerknuepfungImport(
-            String vonRef, String zuRef, String art, String kommentar) {}
+            String vonRef, String zuRef, String art, String kommentar, Long vonId, Long zuId) {}
 
     public record ImportErgebnis(
             int quellenAngelegt,
             int aussagenAngelegt,
             int verknuepfungenAngelegt,
-            List<String> fehler) {}
+            List<String> fehler,
+            Map<String, Long> quelleIds,
+            Map<String, Long> aussageIds) {}
 }

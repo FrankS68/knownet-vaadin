@@ -44,17 +44,20 @@ public class GraphService {
             Collection<Map<String, Object>> aussagen = client.query(
                 "MATCH (a:Aussage) " +
                 (mitFilter ? "WHERE toLower(a.text) CONTAINS $suche " : "") +
-                "RETURN id(a) AS id, a.text AS text, 'Aussage' AS typ")
+                "RETURN id(a) AS id, a.text AS text, 'Aussage' AS typ, " +
+                "EXISTS { (:Frage)-[:ALS_AUSSAGE]->(a) } AS frage")
                 .bind(filter).to("suche")
                 .fetch().all();
 
         for (Map<String, Object> a : aussagen) {
+            // Frage-Aussagen (Recherchefragen) orange und mit Fragezeichen
+            boolean frage = Boolean.TRUE.equals(a.get("frage"));
             nodes.add(Map.of(
                     "id", "A_" + a.get("id"),
-                    "label", kuerzen((String) a.get("text"), 60),
+                    "label", (frage ? "? " : "") + kuerzen((String) a.get("text"), 60),
                     "title", a.get("text") != null ? a.get("text") : "",
                     "typ", "Aussage",
-                    "color", "#7B61FF"
+                    "color", frage ? "#F4A261" : "#7B61FF"
             ));
         }
 

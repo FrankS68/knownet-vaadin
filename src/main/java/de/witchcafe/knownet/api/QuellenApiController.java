@@ -1,5 +1,7 @@
 package de.witchcafe.knownet.api;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import de.witchcafe.knownet.domain.Quelle;
 import de.witchcafe.knownet.repo.QuelleRepository;
 import de.witchcafe.knownet.service.ErstellerService;
@@ -11,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/quellen")
+@Tag(name = "Quellen", description = "Quellen (URL, Titel, Autor, Schlagworte, KI-Bewertung)")
 public class QuellenApiController {
 
     private final QuelleRepository quelleRepository;
@@ -26,11 +29,13 @@ public class QuellenApiController {
     }
 
     @GetMapping
+    @Operation(summary = "Alle Quellen")
     public List<Quelle> alle() {
         return quelleRepository.findAll();
     }
 
     @PostMapping
+    @Operation(summary = "Quelle anlegen", description = "schlagworte kommasepariert, Hierarchie mit /")
     public ResponseEntity<Quelle> anlegen(@RequestBody QuelleRequest req) {
         Quelle q = new Quelle(req.url(), req.titel(), req.autor());
         q.setErstelltVon(erstellerService.aktuellerErsteller());
@@ -42,6 +47,7 @@ public class QuellenApiController {
 
     /** Setzt oder ersetzt die Einschaetzung, wie wahrscheinlich die Quelle KI-generiert ist. */
     @PutMapping("/{id}/ki-bewertung")
+    @Operation(summary = "KI-Wahrscheinlichkeit der Quelle setzen (0-100 mit Begruendung)")
     public ResponseEntity<?> kiBewertung(@PathVariable Long id, @RequestBody KiBewertungRequest req) {
         if (req.wahrscheinlichkeit() == null || req.wahrscheinlichkeit() < 0 || req.wahrscheinlichkeit() > 100) {
             return ResponseEntity.badRequest().body("wahrscheinlichkeit muss zwischen 0 und 100 liegen");

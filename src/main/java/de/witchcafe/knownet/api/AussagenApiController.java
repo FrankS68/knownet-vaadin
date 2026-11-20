@@ -1,5 +1,7 @@
 package de.witchcafe.knownet.api;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import de.witchcafe.knownet.domain.Aussage;
 import de.witchcafe.knownet.domain.Quelle;
 import de.witchcafe.knownet.domain.StammtAus;
@@ -13,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/aussagen")
+@Tag(name = "Aussagen", description = "Kernaussagen, die aus Quellen stammen")
 public class AussagenApiController {
 
     private final AussageRepository aussageRepository;
@@ -28,11 +31,13 @@ public class AussagenApiController {
     }
 
     @GetMapping
+    @Operation(summary = "Alle Aussagen mit Quellen (Zitat, Fundstelle) und Schlagworten")
     public List<Aussage> alle() {
         return aussageRepository.findAll();
     }
 
     @PostMapping
+    @Operation(summary = "Aussage anlegen, optional mit Quelle (quelleId), Zitat und Fundstelle")
     public ResponseEntity<Aussage> anlegen(@RequestBody AussageRequest req) {
         Aussage a = new Aussage(req.text());
         if (req.schlagworte() != null) {
