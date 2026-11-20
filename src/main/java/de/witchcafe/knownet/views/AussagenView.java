@@ -89,9 +89,13 @@ public class AussagenView extends VerticalLayout {
         textFeld.setVisible(kannBearbeiten);
         zeile.setVisible(kannBearbeiten);
 
-        grid.addColumn(Aussage::getText).setHeader("Aussage").setFlexGrow(1);
+        grid.addComponentColumn(a -> Verweise.aussage(a.getId(), a.getText())).setHeader("Aussage").setFlexGrow(1)
+                .setComparator(a -> a.getText() != null ? a.getText().toLowerCase() : "")
+                .setTooltipGenerator(Aussage::getText);
         grid.addColumn(Aussage::getQuellenAlsText).setHeader("Quellen").setAutoWidth(true);
-        grid.addColumn(Aussage::getSchlagworteAlsText).setHeader("Schlagworte").setAutoWidth(true);
+        grid.addComponentColumn(a -> Verweise.schlagworte(
+                a.getSchlagworte().stream().map(de.witchcafe.knownet.domain.Schlagwort::getName).toList()))
+                .setHeader("Schlagworte").setAutoWidth(true);
 
         if (kannBearbeiten) {
             grid.addComponentColumn(aussage -> {

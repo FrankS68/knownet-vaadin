@@ -54,13 +54,16 @@ public class BeziehungService {
     public Collection<Beziehung> alleBeziehungen() {
         return client.query(
                 "MATCH (a:Aussage)-[r]->(b:Aussage) "
-              + "RETURN id(r) AS id, a.text AS von, type(r) AS art, b.text AS zu, r.kommentar AS kommentar "
+              + "RETURN id(r) AS id, id(a) AS vonId, a.text AS von, type(r) AS art, "
+              + "id(b) AS zuId, b.text AS zu, r.kommentar AS kommentar "
               + "ORDER BY r.erstelltAm DESC")
                 .fetchAs(Beziehung.class)
                 .mappedBy((typeSystem, record) -> new Beziehung(
                         record.get("id").asLong(),
+                        record.get("vonId").asLong(),
                         record.get("von").asString(""),
-                        anzeigeName(record.get("art").asString("")),
+                        BeziehungsArt.anzeigeNameVon(record.get("art").asString("")),
+                        record.get("zuId").asLong(),
                         record.get("zu").asString(""),
                         record.get("kommentar").asString("")))
                 .all();
@@ -77,11 +80,4 @@ public class BeziehungService {
                 .orElse(Map.of("aussagen", 0L, "quellen", 0L, "beziehungen", 0L));
     }
 
-    private String anzeigeName(String typName) {
-        try {
-            return BeziehungsArt.valueOf(typName).getAnzeigeName();
-        } catch (IllegalArgumentException e) {
-            return typName;
-        }
-    }
 }

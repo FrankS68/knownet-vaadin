@@ -30,6 +30,15 @@ public enum BeziehungsArt {
         return anzeigeName;
     }
 
+    /** Anzeigename zu einem Neo4j-Relationship-Typ; unbekannte Typen unveraendert. */
+    public static String anzeigeNameVon(String typName) {
+        try {
+            return valueOf(typName).getAnzeigeName();
+        } catch (IllegalArgumentException e) {
+            return typName;
+        }
+    }
+
     @Override
     public String toString() {
         return anzeigeName;

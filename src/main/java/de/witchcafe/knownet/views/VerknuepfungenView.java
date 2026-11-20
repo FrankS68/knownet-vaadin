@@ -75,9 +75,11 @@ public class VerknuepfungenView extends VerticalLayout {
         formular.setWidthFull();
         formular.setVisible(kannBearbeiten);
 
-        grid.addColumn(Beziehung::getVonText).setHeader("Von Aussage").setFlexGrow(2);
+        grid.addComponentColumn(b -> Verweise.aussage(b.getVonId(), b.getVonText()))
+                .setHeader("Von Aussage").setFlexGrow(2).setTooltipGenerator(Beziehung::getVonText);
         grid.addColumn(Beziehung::getArt).setHeader("Beziehung").setAutoWidth(true);
-        grid.addColumn(Beziehung::getZuText).setHeader("Zu Aussage").setFlexGrow(2);
+        grid.addComponentColumn(b -> Verweise.aussage(b.getZuId(), b.getZuText()))
+                .setHeader("Zu Aussage").setFlexGrow(2).setTooltipGenerator(Beziehung::getZuText);
         grid.addColumn(Beziehung::getKommentar).setHeader("Kommentar").setFlexGrow(1);
 
         if (kannBearbeiten) {

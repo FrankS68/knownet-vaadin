@@ -26,6 +26,7 @@ import com.vaadin.flow.data.provider.hierarchy.TreeData;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
 import de.witchcafe.auth.CurrentUser;
@@ -72,7 +73,8 @@ public class SchlagworteView extends VerticalLayout {
         formular.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
         formular.setVisible(kannBearbeiten);
 
-        tree.addHierarchyColumn(k -> k.eintrag().name()).setHeader("Schlagwort").setFlexGrow(1);
+        tree.addComponentHierarchyColumn(k -> new RouterLink(k.eintrag().name(), SchlagwortDetailView.class,
+                k.eintrag().name())).setHeader("Schlagwort").setFlexGrow(1);
         tree.addColumn(k -> k.eintrag().quellen()).setHeader("Quellen").setAutoWidth(true);
         tree.addColumn(k -> k.eintrag().aussagen()).setHeader("Aussagen").setAutoWidth(true);
         tree.addColumn(k -> String.join(", ", k.eintrag().oberbegriffe())).setHeader("Oberbegriffe").setAutoWidth(true);

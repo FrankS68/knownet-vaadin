@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.neo4j.core.Neo4jClient;
@@ -140,6 +141,27 @@ public class SchlagwortService {
                     ((Number) z.get("aussagen")).longValue()));
         }
         return ergebnis;
+    }
+
+    /** Sucht ein Schlagwort per (normalisiertem) Namen, ohne es anzulegen. */
+    public Optional<Schlagwort> finde(String name) {
+        return name == null || name.isBlank() ? Optional.empty() : repository.findByName(normalisiere(name));
+    }
+
+    /** Direkte Oberbegriffe, alphabetisch. */
+    public List<String> oberbegriffe(String name) {
+        return new ArrayList<>(client.query(
+                "MATCH (:Schlagwort {name: $name})-[:UNTERBEGRIFF_VON]->(o:Schlagwort) RETURN o.name AS n ORDER BY n")
+                .bind(normalisiere(name)).to("name")
+                .fetchAs(String.class).all());
+    }
+
+    /** Direkte Unterbegriffe, alphabetisch. */
+    public List<String> unterbegriffe(String name) {
+        return new ArrayList<>(client.query(
+                "MATCH (u:Schlagwort)-[:UNTERBEGRIFF_VON]->(:Schlagwort {name: $name}) RETURN u.name AS n ORDER BY n")
+                .bind(normalisiere(name)).to("name")
+                .fetchAs(String.class).all());
     }
 
     /** Namen aller Schlagworte, alphabetisch. */

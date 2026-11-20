@@ -79,14 +79,18 @@ public class QuellenView extends VerticalLayout {
         formular.setWidthFull();
         formular.setVisible(kannBearbeiten);
 
-        grid.addColumn(Quelle::getTitel).setHeader("Titel").setAutoWidth(true);
+        grid.addComponentColumn(Verweise::quelle).setHeader("Titel").setAutoWidth(true)
+                .setComparator(q -> q.toString().toLowerCase())
+                .setTooltipGenerator(q -> "Details und Aussagen zu dieser Quelle");
         grid.addComponentColumn(q -> {
             Anchor link = new Anchor(q.getUrl() != null ? q.getUrl() : "", q.getUrl());
             link.setTarget("_blank");
             return link;
         }).setHeader("URL").setFlexGrow(1);
         grid.addColumn(Quelle::getAutor).setHeader("Autor").setAutoWidth(true);
-        grid.addColumn(Quelle::getSchlagworteAlsText).setHeader("Schlagworte").setAutoWidth(true);
+        grid.addComponentColumn(q -> Verweise.schlagworte(
+                q.getSchlagworte().stream().map(de.witchcafe.knownet.domain.Schlagwort::getName).toList()))
+                .setHeader("Schlagworte").setAutoWidth(true);
         DateTimeFormatter datumFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
         grid.addColumn(q -> q.getKiWahrscheinlichkeit() != null ? q.getKiWahrscheinlichkeit() + " %" : "–")
                 .setHeader("KI-Wahrscheinlichkeit").setAutoWidth(true)
