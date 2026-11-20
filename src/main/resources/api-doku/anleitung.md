@@ -60,6 +60,8 @@ Die vollständige Liste steht in der OpenAPI-Beschreibung. Bei einer ungültigen
 
 ## Weitere Endpunkte
 
+- `GET /api/schlagwoerter` – alle Schlagworte (Themen) mit `oberbegriffe`, `unterbegriffe`, `pfade` und
+  Nutzungszahlen. Nimm beim Import vorhandene Pfade, statt neue Schlagworte zu erfinden.
 - `PUT /api/quellen/{id}/ki-bewertung` – `{"wahrscheinlichkeit": 0-100, "begruendung": "…"}`: wie wahrscheinlich
   der Inhalt der Quelle KI-generiert ist.
 - `POST /api/fragen` – selbst eine Frage stellen, z. B. an einen anderen Agenten (`zustaendig`).

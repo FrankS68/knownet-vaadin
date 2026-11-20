@@ -20,6 +20,10 @@ public final class ApiAenderungen {
     public record Eintrag(String version, String datum, boolean inkompatibel, List<String> aenderungen) {}
 
     public static final List<Eintrag> PROTOKOLL = List.of(
+            new Eintrag("1.3.0", "2026-11-20", false, List.of(
+                    "Neu: GET /api/schlagwoerter - alle Schlagworte (Themen) mit 'oberbegriffe', 'unterbegriffe', "
+                            + "'pfade' (vollstaendige Pfade ab der Wurzel, direkt als 'schlagworte' beim Import verwendbar), "
+                            + "'quellen' und 'aussagen' (Anzahl direkt zugeordneter Knoten).")),
             new Eintrag("1.2.0", "2026-11-20", false, List.of(
                     "Neu: Recherchefragen unter /api/fragen (GET /api/fragen, GET /api/fragen/offen, GET /api/fragen/{id}, "
                             + "POST /api/fragen, POST /api/fragen/{id}/uebernehmen, POST /api/fragen/{id}/freigeben, "
