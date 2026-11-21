@@ -30,6 +30,7 @@ import de.witchcafe.knownet.domain.Quelle;
 import de.witchcafe.knownet.repo.QuelleRepository;
 import de.witchcafe.knownet.service.ErstellerService;
 import de.witchcafe.knownet.service.SchlagwortService;
+import de.witchcafe.ui.Responsive;
 
 @Route("")
 @Menu(order = 0, icon = "vaadin:book", title = "Quellen")
@@ -77,30 +78,31 @@ public class QuellenView extends VerticalLayout {
         HorizontalLayout formular = new HorizontalLayout(urlFeld, titelFeld, autorFeld, tagsFeld, speichern);
         formular.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
         formular.setWidthFull();
+        Responsive.wrappingRow(formular);
         formular.setVisible(kannBearbeiten);
 
         grid.addComponentColumn(Verweise::quelle).setHeader("Titel").setAutoWidth(true)
                 .setComparator(q -> q.toString().toLowerCase())
                 .setTooltipGenerator(q -> "Details und Aussagen zu dieser Quelle");
-        grid.addComponentColumn(q -> {
+        var urlSpalte = grid.addComponentColumn(q -> {
             Anchor link = new Anchor(q.getUrl() != null ? q.getUrl() : "", q.getUrl());
             link.setTarget("_blank");
             return link;
         }).setHeader("URL").setFlexGrow(1);
-        grid.addColumn(Quelle::getAutor).setHeader("Autor").setAutoWidth(true);
+        var autorSpalte = grid.addColumn(Quelle::getAutor).setHeader("Autor").setAutoWidth(true);
         grid.addComponentColumn(q -> Verweise.schlagworte(
                 q.getSchlagworte().stream().map(de.witchcafe.knownet.domain.Schlagwort::getName).toList()))
                 .setHeader("Schlagworte").setAutoWidth(true);
         DateTimeFormatter datumFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-        grid.addColumn(q -> q.getKiWahrscheinlichkeit() != null ? q.getKiWahrscheinlichkeit() + " %" : "–")
+        var kiSpalte = grid.addColumn(q -> q.getKiWahrscheinlichkeit() != null ? q.getKiWahrscheinlichkeit() + " %" : "–")
                 .setHeader("KI-Wahrscheinlichkeit").setAutoWidth(true)
                 .setComparator(q -> q.getKiWahrscheinlichkeit() != null ? q.getKiWahrscheinlichkeit() : -1)
                 .setTooltipGenerator(q -> q.getKiWahrscheinlichkeit() == null ? "noch nicht bewertet"
                         : q.getKiBegruendung() + " (" + q.getKiBewertetVon()
                           + (q.getKiBewertetAm() != null ? ", " + q.getKiBewertetAm().format(datumFormat) : "") + ")");
-        grid.addColumn(q -> q.getErstelltVon() != null ? q.getErstelltVon() : "–")
+        var erstelltVonSpalte = grid.addColumn(q -> q.getErstelltVon() != null ? q.getErstelltVon() : "–")
                 .setHeader("Erstellt von").setAutoWidth(true).setSortable(true);
-        grid.addColumn(q -> q.getErfasstAm() != null ? q.getErfasstAm().format(datumFormat) : "")
+        var erfasstSpalte = grid.addColumn(q -> q.getErfasstAm() != null ? q.getErfasstAm().format(datumFormat) : "")
                 .setHeader("Erfasst am").setAutoWidth(true)
                 .setComparator(q -> q.getErfasstAm() != null ? q.getErfasstAm() : java.time.LocalDateTime.MIN);
 
@@ -117,6 +119,7 @@ public class QuellenView extends VerticalLayout {
         }
 
         filterBox.setWidth("24em");
+        Responsive.fit(filterBox);
         filterBox.setClearButtonVisible(true);
         filterBox.setPlaceholder("alle");
         filterBox.addValueChangeListener(e -> {
@@ -124,6 +127,9 @@ public class QuellenView extends VerticalLayout {
                 aktualisiere();
             }
         });
+
+        // Auf dem Handy nur Titel, Schlagworte und Aktionen; Details stehen auf der Detailseite
+        Responsive.hideOnMobile(grid, urlSpalte, autorSpalte, kiSpalte, erstelltVonSpalte, erfasstSpalte);
 
         grid.setSizeFull();
         add(fehlerBanner, formular, filterBox, grid);
@@ -133,7 +139,7 @@ public class QuellenView extends VerticalLayout {
     private void oeffneBearbeitenDialog(Quelle quelle) {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("Quelle bearbeiten");
-        dialog.setWidth("40em");
+        Responsive.dialog(dialog, "40em");
 
         TextField urlEdit = new TextField("URL");
         urlEdit.setWidthFull();

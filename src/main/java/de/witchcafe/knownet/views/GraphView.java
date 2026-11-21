@@ -11,6 +11,8 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
+import de.witchcafe.ui.Responsive;
+
 @Route("graph")
 @Menu(order = 3, icon = "vaadin:cluster", title = "Graph")
 @PageTitle("Graph | Knownet")
@@ -39,13 +41,14 @@ public class GraphView extends VerticalLayout {
         HorizontalLayout toolbar = new HorizontalLayout(suchFeld, suchen, alles);
         toolbar.setDefaultVerticalComponentAlignment(Alignment.END);
         toolbar.setWidthFull();
+        Responsive.wrappingRow(toolbar);
 
         Div graphDiv = new Div();
         graphDiv.setId("kn-graph");
         graphDiv.getStyle()
                 .set("width", "100%")
                 .set("height", "100%")
-                .set("min-height", "600px")
+                .set("min-height", Responsive.isMobile() ? "360px" : "600px")
                 .set("border", "1px solid var(--lumo-contrast-20pct)")
                 .set("border-radius", "var(--lumo-border-radius-m)")
                 .set("background", "var(--lumo-base-color)");

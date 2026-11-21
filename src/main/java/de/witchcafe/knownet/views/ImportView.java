@@ -53,7 +53,9 @@ public class ImportView extends VerticalLayout {
                 .set("padding", "1em")
                 .set("border-radius", "var(--lumo-border-radius-m)")
                 .set("font-size", "0.85em")
-                .set("overflow", "auto");
+                .set("overflow", "auto")
+                .set("max-width", "100%")
+                .set("box-sizing", "border-box");
 
         MemoryBuffer buffer = new MemoryBuffer();
         Upload upload = new Upload(buffer);

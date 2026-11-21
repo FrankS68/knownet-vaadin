@@ -21,6 +21,7 @@ import de.witchcafe.auth.AppRoles;
 import de.witchcafe.knownet.KnownetRoles;
 import de.witchcafe.knownet.domain.ApiKey;
 import de.witchcafe.knownet.service.ApiKeyService;
+import de.witchcafe.ui.Responsive;
 import jakarta.annotation.security.RolesAllowed;
 
 import java.time.format.DateTimeFormatter;
@@ -44,8 +45,8 @@ public class ApiKeyView extends VerticalLayout {
         neuerKey.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         grid.addColumn(ApiKey::getName).setHeader("Name").setAutoWidth(true);
-        grid.addColumn(ApiKey::getRolle).setHeader("Rolle").setAutoWidth(true);
-        grid.addColumn(k -> FMT.format(k.getErstelltAm())).setHeader("Erstellt").setAutoWidth(true);
+        var rolleSpalte = grid.addColumn(ApiKey::getRolle).setHeader("Rolle").setAutoWidth(true);
+        var erstelltSpalte = grid.addColumn(k -> FMT.format(k.getErstelltAm())).setHeader("Erstellt").setAutoWidth(true);
         grid.addComponentColumn(k -> {
             Span badge = new Span(k.isAktiv() ? "Aktiv" : "Deaktiviert");
             badge.getElement().getThemeList().add(k.isAktiv() ? "badge success" : "badge error");
@@ -87,6 +88,7 @@ public class ApiKeyView extends VerticalLayout {
         }).setHeader("Aktionen").setAutoWidth(true);
 
         grid.setSizeFull();
+        Responsive.hideOnMobile(grid, rolleSpalte, erstelltSpalte);
         add(neuerKey, grid);
         aktualisiere();
     }

@@ -44,6 +44,7 @@ import de.witchcafe.knownet.service.ErstellerService;
 import de.witchcafe.knownet.service.FrageService;
 import de.witchcafe.knownet.service.ZusammenhangService;
 import de.witchcafe.knownet.service.ZusammenhangService.AussageBeziehung;
+import de.witchcafe.ui.Responsive;
 
 /** Eine Recherchefrage mit Antwort, Verlauf und ihrem Kontext im Netz (verknüpfte Aussagen samt Quellen). */
 @Route("frage")
@@ -206,6 +207,7 @@ public class FrageDetailView extends VerticalLayout implements HasUrlParameter<L
     private HorizontalLayout aktionen(Frage f) {
         HorizontalLayout leiste = new HorizontalLayout();
         leiste.getStyle().set("margin", "0.8em 0");
+        leiste.setWrap(true);
         if (f.getStatus() == FrageStatus.BEANTWORTET) {
             Button erledigt = new Button("Erledigt", e -> aendere(() -> frageService.setzeStatus(f, FrageStatus.ERLEDIGT),
                     "Frage abgeschlossen"));
@@ -230,7 +232,7 @@ public class FrageDetailView extends VerticalLayout implements HasUrlParameter<L
     private void oeffneNachfrageDialog(Frage f) {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("Nachfrage");
-        dialog.setWidth("40em");
+        Responsive.dialog(dialog, "40em");
         TextArea feld = new TextArea("Was fehlt noch oder soll genauer recherchiert werden?");
         feld.setWidthFull();
         feld.setMinHeight("6em");

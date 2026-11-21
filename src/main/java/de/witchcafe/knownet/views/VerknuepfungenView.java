@@ -12,12 +12,14 @@ import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -29,6 +31,7 @@ import de.witchcafe.knownet.domain.BeziehungsArt;
 import de.witchcafe.knownet.repo.AussageRepository;
 import de.witchcafe.knownet.service.Beziehung;
 import de.witchcafe.knownet.service.BeziehungService;
+import de.witchcafe.ui.Responsive;
 
 @Route("verknuepfungen")
 @Menu(order = 2, icon = "vaadin:connect", title = "Verknüpfungen")
@@ -73,6 +76,7 @@ public class VerknuepfungenView extends VerticalLayout {
         HorizontalLayout formular = new HorizontalLayout(vonBox, artBox, zuBox, kommentarFeld, verknuepfen);
         formular.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
         formular.setWidthFull();
+        Responsive.wrappingRow(formular);
         formular.setVisible(kannBearbeiten);
 
         grid.addComponentColumn(b -> Verweise.aussage(b.getVonId(), b.getVonText()))
@@ -83,26 +87,47 @@ public class VerknuepfungenView extends VerticalLayout {
         grid.addColumn(Beziehung::getKommentar).setHeader("Kommentar").setFlexGrow(1);
 
         if (kannBearbeiten) {
-            grid.addComponentColumn(b -> {
-                Button bearbeiten = new Button("Bearbeiten", e -> oeffneBearbeitenDialog(b));
-                bearbeiten.addThemeVariants(ButtonVariant.LUMO_SMALL);
-                Button loeschen = new Button("Löschen", e -> bestaetigenUndLoeschen(b));
-                loeschen.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR);
-                HorizontalLayout aktionen = new HorizontalLayout(bearbeiten, loeschen);
-                aktionen.setSpacing(true);
-                return aktionen;
-            }).setHeader("Aktionen").setAutoWidth(true);
+            grid.addComponentColumn(this::aktionen).setHeader("Aktionen").setAutoWidth(true);
         }
+
+        // Auf dem Handy statt fuenf Spalten eine Karte pro Verknuepfung
+        Responsive.mobileCardColumn(grid, new ComponentRenderer<>(this::karte)).setHeader("Verknüpfung");
 
         grid.setSizeFull();
         add(fehlerBanner, formular, grid);
         aktualisiere();
     }
 
+    private HorizontalLayout aktionen(Beziehung b) {
+        Button bearbeiten = new Button("Bearbeiten", e -> oeffneBearbeitenDialog(b));
+        bearbeiten.addThemeVariants(ButtonVariant.LUMO_SMALL);
+        Button loeschen = new Button("Löschen", e -> bestaetigenUndLoeschen(b));
+        loeschen.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_ERROR);
+        HorizontalLayout aktionen = new HorizontalLayout(bearbeiten, loeschen);
+        aktionen.setSpacing(true);
+        return aktionen;
+    }
+
+    /** Kompakte Darstellung fuer schmale Bildschirme: Von, Art, Zu, Kommentar, Aktionen untereinander. */
+    private Div karte(Beziehung b) {
+        Div karte = new Div();
+        karte.getStyle().set("white-space", "normal").set("padding", "var(--lumo-space-xs) 0");
+        karte.add(new Div(Verweise.aussage(b.getVonId(), b.getVonText())));
+        karte.add(new Div(Verweise.grau("↓ " + b.getArt())));
+        karte.add(new Div(Verweise.aussage(b.getZuId(), b.getZuText())));
+        if (b.getKommentar() != null && !b.getKommentar().isBlank()) {
+            karte.add(new Div(Verweise.grau(b.getKommentar())));
+        }
+        if (kannBearbeiten) {
+            karte.add(aktionen(b));
+        }
+        return karte;
+    }
+
     private void oeffneBearbeitenDialog(Beziehung beziehung) {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("Verknüpfung bearbeiten");
-        dialog.setWidth("40em");
+        Responsive.dialog(dialog, "40em");
 
         TextField vonAnzeige = new TextField("Von Aussage");
         vonAnzeige.setValue(beziehung.getVonText());

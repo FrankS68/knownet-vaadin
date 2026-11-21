@@ -31,6 +31,7 @@ import de.witchcafe.knownet.domain.StammtAus;
 import de.witchcafe.knownet.repo.AussageRepository;
 import de.witchcafe.knownet.repo.QuelleRepository;
 import de.witchcafe.knownet.service.SchlagwortService;
+import de.witchcafe.ui.Responsive;
 
 @Route("aussagen")
 @Menu(order = 1, icon = "vaadin:comment-ellipsis", title = "Aussagen")
@@ -84,6 +85,7 @@ public class AussagenView extends VerticalLayout {
         HorizontalLayout zeile = new HorizontalLayout(quelleBox, zitatFeld, fundstelleFeld, tagsFeld, speichern);
         zeile.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
         zeile.setWidthFull();
+        Responsive.wrappingRow(zeile);
 
         // Erfassungsbereich nur für Autoren/Admins
         textFeld.setVisible(kannBearbeiten);
@@ -92,8 +94,8 @@ public class AussagenView extends VerticalLayout {
         grid.addComponentColumn(a -> Verweise.aussage(a.getId(), a.getText())).setHeader("Aussage").setFlexGrow(1)
                 .setComparator(a -> a.getText() != null ? a.getText().toLowerCase() : "")
                 .setTooltipGenerator(Aussage::getText);
-        grid.addColumn(Aussage::getQuellenAlsText).setHeader("Quellen").setAutoWidth(true);
-        grid.addComponentColumn(a -> Verweise.schlagworte(
+        var quellenSpalte = grid.addColumn(Aussage::getQuellenAlsText).setHeader("Quellen").setAutoWidth(true);
+        var schlagworteSpalte = grid.addComponentColumn(a -> Verweise.schlagworte(
                 a.getSchlagworte().stream().map(de.witchcafe.knownet.domain.Schlagwort::getName).toList()))
                 .setHeader("Schlagworte").setAutoWidth(true);
 
@@ -110,6 +112,7 @@ public class AussagenView extends VerticalLayout {
         }
 
         filterBox.setWidth("24em");
+        Responsive.fit(filterBox);
         filterBox.setClearButtonVisible(true);
         filterBox.setPlaceholder("alle");
         filterBox.addValueChangeListener(e -> {
@@ -117,6 +120,8 @@ public class AussagenView extends VerticalLayout {
                 aktualisiere();
             }
         });
+
+        Responsive.hideOnMobile(grid, quellenSpalte, schlagworteSpalte);
 
         grid.setSizeFull();
         add(fehlerBanner, textFeld, zeile, filterBox, grid);
@@ -126,7 +131,7 @@ public class AussagenView extends VerticalLayout {
     private void oeffneBearbeitenDialog(Aussage aussage) {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("Aussage bearbeiten");
-        dialog.setWidth("44em");
+        Responsive.dialog(dialog, "44em");
 
         TextArea textEdit = new TextArea("Aussage");
         textEdit.setWidthFull();

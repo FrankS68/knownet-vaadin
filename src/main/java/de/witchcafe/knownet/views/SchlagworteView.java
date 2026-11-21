@@ -32,6 +32,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import de.witchcafe.auth.CurrentUser;
 import de.witchcafe.knownet.service.SchlagwortService;
 import de.witchcafe.knownet.service.SchlagwortService.Eintrag;
+import de.witchcafe.ui.Responsive;
 
 /**
  * Schlagwort-Hierarchie als Baum. Autoren koennen Oberbegriffe zuordnen und loesen
@@ -71,13 +72,15 @@ public class SchlagworteView extends VerticalLayout {
         anlegen.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         HorizontalLayout formular = new HorizontalLayout(pfadFeld, anlegen);
         formular.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
+        formular.setWidthFull();
+        Responsive.wrappingRow(formular);
         formular.setVisible(kannBearbeiten);
 
         tree.addComponentHierarchyColumn(k -> new RouterLink(k.eintrag().name(), SchlagwortDetailView.class,
                 k.eintrag().name())).setHeader("Schlagwort").setFlexGrow(1);
-        tree.addColumn(k -> k.eintrag().quellen()).setHeader("Quellen").setAutoWidth(true);
-        tree.addColumn(k -> k.eintrag().aussagen()).setHeader("Aussagen").setAutoWidth(true);
-        tree.addColumn(k -> String.join(", ", k.eintrag().oberbegriffe())).setHeader("Oberbegriffe").setAutoWidth(true);
+        var quellenSpalte = tree.addColumn(k -> k.eintrag().quellen()).setHeader("Quellen").setAutoWidth(true);
+        var aussagenSpalte = tree.addColumn(k -> k.eintrag().aussagen()).setHeader("Aussagen").setAutoWidth(true);
+        var oberSpalte = tree.addColumn(k -> String.join(", ", k.eintrag().oberbegriffe())).setHeader("Oberbegriffe").setAutoWidth(true);
 
         if (kannBearbeiten) {
             tree.addComponentColumn(k -> {
@@ -93,6 +96,7 @@ public class SchlagworteView extends VerticalLayout {
             }).setHeader("Aktionen").setAutoWidth(true);
         }
 
+        Responsive.hideOnMobile(tree, quellenSpalte, aussagenSpalte, oberSpalte);
         tree.setSizeFull();
         add(fehlerBanner,
                 new Paragraph("Zählung: direkt zugeordnete Quellen/Aussagen. Der Filter in Quellen und Aussagen "
@@ -164,7 +168,8 @@ public class SchlagworteView extends VerticalLayout {
         dialog.setHeaderTitle("Oberbegriff für „" + name + "“");
 
         ComboBox<String> oberBox = new ComboBox<>("Oberbegriff (vorhanden oder neu)");
-        oberBox.setWidth("24em");
+        oberBox.setWidthFull();
+        Responsive.dialog(dialog, "28em");
         oberBox.setAllowCustomValue(true);
         List<String> auswahl = new ArrayList<>(schlagwortService.alleNamen().stream()
                 .filter(n -> !n.equals(name) && !k.eintrag().oberbegriffe().contains(n))

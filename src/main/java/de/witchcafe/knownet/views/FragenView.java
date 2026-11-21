@@ -32,6 +32,7 @@ import de.witchcafe.knownet.domain.FrageStatus;
 import de.witchcafe.knownet.repo.ApiKeyRepository;
 import de.witchcafe.knownet.service.ErstellerService;
 import de.witchcafe.knownet.service.FrageService;
+import de.witchcafe.ui.Responsive;
 
 /** Recherchefragen an die Agenten: stellen und verfolgen. */
 @Route("fragen")
@@ -90,21 +91,23 @@ public class FragenView extends VerticalLayout {
         HorizontalLayout zeile = new HorizontalLayout(hintergrundFeld, tagsFeld, zustaendigBox, stellen);
         zeile.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.END);
         zeile.setWidthFull();
+        Responsive.wrappingRow(zeile);
         frageFeld.setVisible(kannBearbeiten);
         zeile.setVisible(kannBearbeiten);
 
         grid.addComponentColumn(f -> new RouterLink(f.toString(), FrageDetailView.class, f.getId()))
                 .setHeader("Frage").setFlexGrow(1).setTooltipGenerator(Frage::getText);
         grid.addColumn(f -> f.getStatus().getAnzeigeName()).setHeader("Status").setAutoWidth(true).setSortable(true);
-        grid.addColumn(f -> f.getZustaendig() != null ? f.getZustaendig() : "jeder").setHeader("An").setAutoWidth(true);
-        grid.addColumn(f -> f.getBearbeitetVon() != null ? f.getBearbeitetVon()
+        var anSpalte = grid.addColumn(f -> f.getZustaendig() != null ? f.getZustaendig() : "jeder").setHeader("An").setAutoWidth(true);
+        var bearbeitetSpalte = grid.addColumn(f -> f.getBearbeitetVon() != null ? f.getBearbeitetVon()
                         : f.getBeantwortetVon() != null ? f.getBeantwortetVon() : "–")
                 .setHeader("Bearbeitet von").setAutoWidth(true);
-        grid.addColumn(f -> kontextAnzahl.getOrDefault(f.getId(), 0L)).setHeader("Kontext").setAutoWidth(true)
+        var kontextSpalte = grid.addColumn(f -> kontextAnzahl.getOrDefault(f.getId(), 0L)).setHeader("Kontext").setAutoWidth(true)
                 .setTooltipGenerator(f -> "verknüpfte Aussagen im Netz");
-        grid.addColumn(f -> f.getGestelltAm() != null ? f.getGestelltAm().format(QuelleDetailView.DATUM) : "")
+        var gestelltSpalte = grid.addColumn(f -> f.getGestelltAm() != null ? f.getGestelltAm().format(QuelleDetailView.DATUM) : "")
                 .setHeader("Gestellt").setAutoWidth(true)
                 .setComparator(f -> f.getGestelltAm() != null ? f.getGestelltAm() : java.time.LocalDateTime.MIN);
+        Responsive.hideOnMobile(grid, anSpalte, bearbeitetSpalte, kontextSpalte, gestelltSpalte);
         grid.setSizeFull();
 
         List<String> filterWerte = new ArrayList<>(List.of(NICHT_ERLEDIGT, ALLE));

@@ -22,6 +22,7 @@ import de.witchcafe.auth.AppRoles;
 import de.witchcafe.auth.domain.AppUser;
 import de.witchcafe.auth.domain.UserManagementService;
 import de.witchcafe.knownet.KnownetRoles;
+import de.witchcafe.ui.Responsive;
 import jakarta.annotation.security.RolesAllowed;
 
 @Route("admin/benutzer")
@@ -52,8 +53,8 @@ public class BenutzerView extends VerticalLayout {
         }).setWidth("50px").setFlexGrow(0);
 
         grid.addColumn(AppUser::getName).setHeader("Name").setSortable(true).setAutoWidth(true);
-        grid.addColumn(AppUser::getEmail).setHeader("E-Mail").setSortable(true).setAutoWidth(true);
-        grid.addColumn(AppUser::getProvider).setHeader("Provider").setAutoWidth(true);
+        var emailSpalte = grid.addColumn(AppUser::getEmail).setHeader("E-Mail").setSortable(true).setAutoWidth(true);
+        var providerSpalte = grid.addColumn(AppUser::getProvider).setHeader("Provider").setAutoWidth(true);
 
         grid.addComponentColumn(u -> {
             Span badge = new Span(u.getRole());
@@ -69,7 +70,7 @@ public class BenutzerView extends VerticalLayout {
             return badge;
         }).setHeader("Status").setAutoWidth(true);
 
-        grid.addColumn(u -> u.getLastLoginAt() != null ? FMT.format(u.getLastLoginAt()) : "-")
+        var loginSpalte = grid.addColumn(u -> u.getLastLoginAt() != null ? FMT.format(u.getLastLoginAt()) : "-")
                 .setHeader("Letzter Login").setAutoWidth(true);
 
         grid.addComponentColumn(this::aktionsButtons)
@@ -96,6 +97,7 @@ public class BenutzerView extends VerticalLayout {
         }).setHeader("Sperren").setAutoWidth(true).setFlexGrow(0);
 
         grid.setSizeFull();
+        Responsive.hideOnMobile(grid, emailSpalte, providerSpalte, loginSpalte);
         add(grid);
         aktualisiere();
     }
@@ -103,6 +105,7 @@ public class BenutzerView extends VerticalLayout {
     private HorizontalLayout aktionsButtons(AppUser u) {
         HorizontalLayout layout = new HorizontalLayout();
         layout.setSpacing(true);
+        layout.setWrap(true);
 
         for (String rolle : List.of(AppRoles.ADMIN, KnownetRoles.AUTOR, KnownetRoles.KOMMENTATOR, AppRoles.USER)) {
             if (!rolle.equals(u.getRole())) {
