@@ -35,3 +35,6 @@ deploy-history.tsv
 
 # Vaadin-Bundles (werden vom vaadin-maven-plugin erzeugt)
 src/main/bundles/
+
+# OAuth-Zugangsdaten aus der Secret-Wartung (witch-auth)
+config/oauth-credentials.properties
