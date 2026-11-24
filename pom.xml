@@ -19,6 +19,11 @@
     <name>Knownet</name>
     <description>Wissensnetz: Quellen, Aussagen und typisierte Verknuepfungen in Neo4j</description>
 
+    <properties>
+        <!-- witch-auth 1.1.3: Redirect-URI fuer Amazon, GitLab, Microsoft, Mastodon vorbelegt -->
+        <witch-auth.version>1.1.3</witch-auth.version>
+    </properties>
+
     <dependencies>
         <!-- Gemeinsames Layout, Menue, OAuth-Provider-Status -->
         <dependency>
